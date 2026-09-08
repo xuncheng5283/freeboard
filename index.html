@@ -1,0 +1,2939 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#eef1f6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>FreeBoard 白板</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+/* FreeBoard 2.0 界面样式 */
+:root{
+  --bg:#eef1f6; --panel:#ffffff; --panel2:#f7f9fc; --ink:#1b2432; --mut:#65748a;
+  --line:#dbe3ee; --accent:#3b82f6; --accent2:#2563eb; --danger:#e5484d;
+  --shadow:0 6px 24px rgba(20,32,60,.14); --shadow2:0 2px 10px rgba(20,32,60,.1);
+  --railbg:rgba(255,255,255,.82); --fbg:rgba(255,255,255,.6);
+}
+html.dark{
+  --bg:#141922; --panel:#1c2431; --panel2:#222c3c; --ink:#e7edf6; --mut:#93a1b8;
+  --line:#2d3a4d; --accent:#60a5fa; --accent2:#3b82f6;
+  --shadow:0 6px 24px rgba(0,0,0,.4); --shadow2:0 2px 10px rgba(0,0,0,.3);
+  --railbg:rgba(24,31,42,.88); --fbg:rgba(24,31,42,.6);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",Roboto,sans-serif;background:var(--bg);color:var(--ink);-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;overscroll-behavior:none}
+input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:text;font-family:inherit}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer}
+button:disabled{opacity:.35;pointer-events:none}
+svg.ic{width:21px;height:21px;display:block}
+.hide{display:none!important}
+#app{position:fixed;inset:0}
+.scr{position:absolute;inset:0}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:rgba(110,130,160,.4);border-radius:8px}
+::-webkit-scrollbar-track{background:transparent}
+/* ======= 通用 ======= */
+.iconbtn{width:38px;height:38px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink);flex:none}
+.iconbtn:hover{background:rgba(110,130,160,.14)}
+.iconbtn.dis svg{opacity:.3}
+.btn{display:inline-flex;align-items:center;gap:7px;border-radius:11px;padding:9px 15px;font-size:14px;font-weight:600;white-space:nowrap}
+.btn svg.ic{width:18px;height:18px}
+.btn.primary{background:var(--accent);color:#fff;box-shadow:0 4px 14px rgba(59,130,246,.35)}
+.btn.primary:hover{background:var(--accent2)}
+.btn.ghost{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+.btn.danger{background:var(--danger);color:#fff}
+.btn.slim{padding:7px 11px;font-size:13px;border-radius:9px}
+.inp{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:15px;outline:none}
+.inp:focus{border-color:var(--accent)}
+.inp.sel{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--mut) 50%),linear-gradient(135deg,var(--mut) 50%,transparent 50%);background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%;background-size:5px 5px;background-repeat:no-repeat;padding-right:34px}
+.form-row{margin:12px 0}
+.form-row label{display:block;font-size:13px;color:var(--mut);margin-bottom:7px;font-weight:600}
+.form-tip{font-size:12.5px;color:var(--mut);line-height:1.7;margin-top:8px}
+/* ======= 模态 ======= */
+.modal-mask{position:fixed;inset:0;background:rgba(10,16,28,.45);z-index:200;display:flex;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(2px)}
+.modal{background:var(--panel);border-radius:18px;width:min(560px,100%);max-height:86vh;display:flex;flex-direction:column;box-shadow:var(--shadow);animation:pop .16s ease}
+@keyframes pop{from{transform:scale(.96);opacity:0}to{transform:none;opacity:1}}
+.modal-h{display:flex;align-items:center;gap:8px;padding:15px 16px 0}
+.modal-t{font-size:16.5px;font-weight:700;flex:1}
+.modal-b{padding:14px 18px;overflow:auto}
+.modal-f{display:flex;justify-content:flex-end;gap:10px;padding:12px 16px 16px}
+.confirm-msg{font-size:14.5px;line-height:1.8;color:var(--ink)}
+/* ======= 提示/菜单 ======= */
+#toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,12px);background:rgba(24,30,42,.92);color:#fff;padding:10px 18px;border-radius:22px;font-size:13.5px;opacity:0;transition:.22s;z-index:300;pointer-events:none;max-width:82vw;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+.ctxmenu{position:fixed;z-index:260;background:var(--panel);border-radius:13px;box-shadow:var(--shadow);padding:6px;min-width:170px;max-height:70vh;overflow:auto;border:1px solid var(--line)}
+.ctxmenu button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 12px;border-radius:9px;font-size:14px}
+.ctxmenu button:hover{background:rgba(110,130,160,.14)}
+.ctxmenu button.danger{color:var(--danger)}
+.ctxmenu svg.ic{width:17px;height:17px;opacity:.8}
+/* ======= 开关 ======= */
+.switch{position:relative;width:48px;height:28px;flex:none}
+.switch input{opacity:0;width:0;height:0}
+.switch i{position:absolute;inset:0;background:#c3cddb;border-radius:20px;transition:.2s}
+.switch i::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.switch input:checked+i{background:var(--accent)}
+.switch input:checked+i::after{transform:translateX(20px)}
+/* ======= 首页 ======= */
+#scrHome{overflow:auto;background:var(--bg)}
+.home-hdr{display:flex;align-items:center;gap:14px;padding:18px 22px 10px;max-width:1180px;margin:0 auto;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.logo-mark{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(79,124,255,.4)}
+.logo-mark svg.ic{width:26px;height:26px}
+.brand h1{font-size:20px;line-height:1.2}
+.brand p{font-size:12px;color:var(--mut)}
+.hdr-actions{margin-left:auto;display:flex;gap:10px;align-items:center}
+.home-tools{max-width:1180px;margin:8px auto 4px;padding:0 22px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.searchbox{flex:1;min-width:200px;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:0 12px}
+.searchbox svg.ic{width:17px;height:17px;color:var(--mut)}
+.searchbox input{flex:1;border:none;outline:none;background:transparent;padding:10px 0;font-size:14.5px;color:var(--ink)}
+.home-filters{display:flex;gap:7px;flex-wrap:wrap;align-items:center;max-width:1180px;margin:0 auto;padding:0 22px 6px}
+.chip{background:var(--panel);border:1px solid var(--line);color:var(--ink);padding:6px 13px;border-radius:20px;font-size:13px;font-weight:600}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.chip.act{color:var(--accent);border-style:dashed}
+.chip.tag{background:transparent}
+.fsep{width:1px;height:20px;background:var(--line);margin:0 2px}
+.fsort{margin-left:auto;display:flex;gap:7px}
+.nb-grid{max-width:1180px;margin:6px auto 60px;padding:8px 22px;display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:18px}
+.nb-card{background:var(--panel);border-radius:16px;border:1px solid var(--line);overflow:hidden;position:relative;transition:.16s;box-shadow:var(--shadow2)}
+.nb-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.nb-prev{height:150px;position:relative;cursor:pointer}
+.nb-prev canvas{position:absolute;inset:0;width:100%;height:100%}
+.nb-info{padding:11px 13px 13px;cursor:pointer}
+.nb-name{font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nb-meta{font-size:12px;color:var(--mut);margin-top:3px}
+.nb-tags{margin-top:6px;display:flex;gap:5px;flex-wrap:wrap}
+.nb-tags span{font-size:11px;background:rgba(59,130,246,.12);color:var(--accent2);padding:2px 8px;border-radius:10px}
+.nb-menu{position:absolute;right:8px;top:8px;width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.75);display:flex;align-items:center;justify-content:center;box-shadow:0 1px 6px rgba(0,0,0,.15)}
+html.dark .nb-menu{background:rgba(30,38,52,.8)}
+.home-empty{text-align:center;padding:70px 20px;color:var(--mut)}
+.home-empty svg.ic{width:64px;height:64px;margin:0 auto 14px;opacity:.5}
+.home-empty .btn{margin-top:14px}
+/* 纸张小图标 */
+.paper-cell{display:inline-flex;flex-direction:column;align-items:center;gap:6px;padding:9px 8px;border-radius:11px;border:1.5px solid var(--line);background:var(--panel2);width:74px}
+.paper-cell.on{border-color:var(--accent);background:rgba(59,130,246,.1)}
+.pp-icon{width:40px;height:30px;border-radius:4px;background:#fff;display:block;position:relative}
+[data-pp="dot"]{background:#fff radial-gradient(circle,#b9c6d6 1.4px,transparent 1.6px);background-size:9px 9px}
+[data-pp="grid"]{background-image:linear-gradient(#d4dce6 1px,transparent 1px),linear-gradient(90deg,#d4dce6 1px,transparent 1px);background-size:9px 9px}
+[data-pp="line"]{background:repeating-linear-gradient(#fff 0 6px,#d4dce6 6px 7px)}
+[data-pp="cornell"]{background:repeating-linear-gradient(#fff 0 6px,#d4dce6 6px 7px),linear-gradient(90deg,transparent 0 12px,#ef6a6a 12px 13px,transparent 13px)}
+[data-pp="staff"]{background:#fff repeating-linear-gradient(#fff 0 4px,#c3d2e2 4px 5px,#fff 5px 8px);background-size:auto 9px}
+[data-pp="dotD"]{background:#1b2431 radial-gradient(circle,#42536b 1.4px,transparent 1.6px);background-size:9px 9px}
+[data-pp="gridD"]{background:#1b2431 linear-gradient(#33445c 1px,transparent 1px),linear-gradient(90deg,#33445c 1px,transparent 1px);background-size:9px 9px}
+[data-pp="lineD"]{background:#1b2431 repeating-linear-gradient(transparent 0 6px,#3a4d68 6px 7px)}
+.paper-cell i{font-style:normal;font-size:11.5px;color:var(--mut)}
+.color-cell{width:34px;height:34px;border-radius:50%;border:2px solid transparent;outline:2px solid transparent}
+.color-cell.on{outline-color:var(--accent)}
+.color-cell.big{width:40px;height:40px}
+.paper-row{display:flex;gap:9px;flex-wrap:wrap}
+.paper-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:11px}
+.paper-big{display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 6px;border-radius:13px;border:1.5px solid var(--line);background:var(--panel2)}
+.paper-big.on{border-color:var(--accent);background:rgba(59,130,246,.1)}
+.paper-big i{font-style:normal;font-size:12px}
+.mini-paper{width:100%;height:56px;border-radius:7px;position:relative}
+.mini-paper[data-p="plain"]{background:#fff;border:1px solid var(--line)}
+.mini-paper[data-p="dot"]{background:#fff radial-gradient(circle,#b9c6d6 1.4px,transparent 1.6px);background-size:14px 14px}
+.mini-paper[data-p="grid"]{background-image:linear-gradient(#d4dce6 1px,transparent 1px),linear-gradient(90deg,#d4dce6 1px,transparent 1px);background-size:22px 22px;background-color:#fff}
+.mini-paper[data-p="line"]{background:repeating-linear-gradient(#fff 0 12px,#d4dce6 12px 13.5px)}
+.mini-paper[data-p="cornell"]{background:repeating-linear-gradient(#fff 0 12px,#d4dce6 12px 13.5px),linear-gradient(90deg,transparent 0 26%,#ef6a6a 26% 27%,transparent 27%)}
+.mini-paper[data-p="staff"]{background:repeating-linear-gradient(#fff 0 4px,#c3d2e2 4px 5px,#fff 5px 8px);background-size:auto 14px}
+.mini-paper[data-p="dotD"]{background:#1b2431 radial-gradient(circle,#42536b 1.6px,transparent 1.8px);background-size:14px 14px}
+.mini-paper[data-p="gridD"]{background:#1b2431 linear-gradient(#33445c 1px,transparent 1px),linear-gradient(90deg,#33445c 1px,transparent 1px);background-size:22px 22px}
+.mini-paper[data-p="lineD"]{background:#1b2431 repeating-linear-gradient(transparent 0 12px,#3a4d68 12px 13.5px)}
+.set-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.set-row:last-of-type{border-bottom:none}
+.set-row b{font-size:14.5px}
+.set-row p{font-size:12px;color:var(--mut);margin-top:2px}
+.set-row>div:first-child{flex:1}
+.help-list{list-style:none;margin:8px 0 14px;display:flex;flex-direction:column;gap:6px}
+.help-list li{font-size:13.5px;line-height:1.6;padding-left:16px;position:relative}
+.help-list li::before{content:"·";position:absolute;left:2px;color:var(--accent);font-weight:800}
+.modal h4{font-size:14px;margin:10px 0 4px;color:var(--accent2)}/* ======= 编辑器 ======= */
+#scrEdit{display:flex;flex-direction:column;background:var(--bg)}
+.ed-head{display:flex;align-items:center;gap:4px;padding:6px 10px;background:var(--panel);border-bottom:1px solid var(--line);min-height:50px;z-index:40;flex:none}
+.cvbadge{width:22px;height:22px;border-radius:7px;flex:none;margin:0 2px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.title-inp{border:none;background:transparent;color:var(--ink);font-size:15px;font-weight:700;min-width:60px;max-width:240px;outline:none;padding:6px 8px;border-radius:8px;flex:none}
+.title-inp:focus{background:var(--panel2)}
+.pageinfo{font-size:12.5px;color:var(--mut);font-weight:700;margin:0 4px}
+.spacer{flex:1}
+.ed-head .btn span{display:inline}
+.cvarea{position:relative;flex:1;overflow:hidden;touch-action:none}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+#cv.cursor-grab{cursor:grab}
+#cv.cursor-default{cursor:default}
+/* 左侧工具条 */
+.rail{position:absolute;left:12px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:3px;background:var(--railbg);backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:16px;padding:6px 5px;z-index:30;box-shadow:var(--shadow2);max-height:calc(100% - 140px);overflow:auto;scrollbar-width:none}
+.rail::-webkit-scrollbar{display:none}
+.toolbtn{width:44px;height:44px;border-radius:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:var(--ink);position:relative}
+.toolbtn svg.ic{width:21px;height:21px}
+.toolbtn i{font-style:normal;font-size:9.5px;font-weight:600;opacity:.75}
+.toolbtn:hover{background:rgba(110,130,160,.15)}
+.toolbtn.on{background:var(--accent);color:#fff;box-shadow:0 4px 12px rgba(59,130,246,.4)}
+/* 上下文工具卡 */
+.ctxcard{position:absolute;left:70px;bottom:16px;max-width:calc(100% - 250px);background:var(--railbg);backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:14px;padding:9px 11px;z-index:28;box-shadow:var(--shadow2);display:flex;flex-wrap:wrap;align-items:center;gap:9px}
+.ctx-sws,.sel-group{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.sw{width:24px;height:24px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(30,40,60,.25);flex:none;position:relative;overflow:hidden}
+.sw.on{box-shadow:0 0 0 2px var(--accent),0 0 0 3.5px #fff}
+html.dark .sw{border-color:#2b3648}
+.sw.cust{display:inline-flex;align-items:center;justify-content:center;border:none;box-shadow:none}
+.sw.cust input{position:absolute;inset:-4px;opacity:0;cursor:pointer}
+.sw.small{width:21px;height:21px}
+.ctx-slider{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--mut);font-weight:600}
+.ctx-slider b{min-width:30px;color:var(--ink);text-align:right;font-size:12px}
+.ctx-slider.slim{max-width:120px}
+.ctx-slider.wide{min-width:200px}
+.ctx-slider input[type="range"],.mini-slider input[type="range"],#selW{accent-color:var(--accent);width:90px;height:4px}
+.ctx-slider input[type="range"]{width:80px}
+.ctx-shapes,.ctx-tbtns,.ctx-imgbtns{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.shapebtn,.tbtn{width:30px;height:30px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink);border:1px solid transparent}
+.shapebtn:hover,.tbtn:hover{background:rgba(110,130,160,.16)}
+.shapebtn.on,.tbtn.on{background:var(--accent);color:#fff}
+.shapebtn svg.ic,.tbtn svg.ic{width:17px;height:17px}
+.ctx-sel{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:9px;padding:6px 8px;font-size:13px;outline:none;max-width:110px}
+.sel-tip{display:flex;gap:7px;align-items:center;max-width:360px;font-size:12.5px}
+.sel-tip svg.ic{width:15px;height:15px;flex:none;opacity:.7}
+/* 缩放 */
+.zoombox{position:absolute;right:14px;bottom:16px;display:flex;flex-direction:column;gap:6px;background:var(--railbg);backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:13px;padding:5px;z-index:28;box-shadow:var(--shadow2)}
+.zoombox button{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.zoombox button:hover{background:rgba(110,130,160,.16)}
+.zoombox .zval{font-size:11px;font-weight:700}
+.zoombox svg.ic{width:18px;height:18px}
+/* 页面条 */
+.page-strip{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:27;display:flex;align-items:center;gap:6px;background:var(--railbg);backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:13px;padding:5px 6px;box-shadow:var(--shadow2);max-width:70%}
+.strip-thumbs{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;max-width:460px}
+.strip-thumbs::-webkit-scrollbar{display:none}
+.strip-pg{width:56px;height:48px;border-radius:8px;position:relative;overflow:hidden;border:2px solid transparent;flex:none;background:var(--panel2)}
+.strip-pg canvas{width:100%;height:100%;position:absolute;inset:0}
+.strip-pg span{position:absolute;right:2px;bottom:1px;font-size:9px;background:rgba(20,28,40,.55);color:#fff;border-radius:5px;padding:0 3px;line-height:13px}
+.strip-pg.cur{border-color:var(--accent);background:var(--panel)}
+.strip-btn{width:28px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--ink);flex:none}
+.strip-btn:hover{background:rgba(110,130,160,.16)}
+.strip-btn svg.ic{width:16px;height:16px}
+.strip-btn.add{width:34px}
+/* 选择栏 */
+.selbar{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:32;display:flex;align-items:center;gap:8px;background:var(--railbg);backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:13px;padding:6px 9px;box-shadow:var(--shadow2);max-width:calc(100% - 40px);overflow-x:auto;scrollbar-width:none;white-space:nowrap}
+.sel-count{font-size:12px;font-weight:800;color:var(--accent2);padding-right:4px}
+#selWGroup{display:flex;align-items:center;gap:5px}
+#selW{width:70px}
+#selWV{font-size:11px;min-width:18px;color:var(--mut)}
+/* 文本编辑 */
+.txt-over{position:absolute;z-index:35;min-height:28px;outline:2px solid var(--accent);outline-offset:3px;background:transparent;border-radius:3px;white-space:pre-wrap;word-break:break-all;line-height:1.3;cursor:text}
+.txtbar{position:absolute;z-index:36;display:flex;align-items:center;gap:5px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px 8px;box-shadow:var(--shadow);max-width:calc(100% - 20px);overflow-x:auto;scrollbar-width:none;white-space:nowrap}
+.mini-slider{display:flex;align-items:center;gap:4px;font-size:10.5px;color:var(--mut)}
+.mini-slider b{color:var(--ink);min-width:18px}
+.txt-colors{display:inline-flex;gap:3px;align-items:center}
+.txtbar .sw{width:19px;height:19px}
+/* 页面面板 */
+.pp-mask{position:fixed;inset:0;background:rgba(8,14,26,.35);z-index:60;transition:.2s}
+.page-panel{position:absolute;left:0;right:0;bottom:0;z-index:61;background:var(--panel);border-radius:20px 20px 0 0;box-shadow:var(--shadow);max-height:62%;display:flex;flex-direction:column;transform:translateY(105%);transition:transform .22s ease;border-top:1px solid var(--line)}
+.page-panel.open{transform:none}
+.pp-head{display:flex;align-items:center;gap:10px;padding:13px 18px 8px;flex:none}
+.pp-head b{font-size:15.5px;flex:1}
+.pp-body{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;padding:8px 18px 26px;overflow:auto}
+.pp-card{position:relative;border-radius:12px;overflow:hidden;border:2px solid var(--line);background:var(--panel2);cursor:pointer}
+.pp-card canvas{width:100%;display:block}
+.pp-card.cur{border-color:var(--accent)}
+.pp-card.cur::after{content:"当前";position:absolute;left:6px;top:6px;background:var(--accent);color:#fff;font-size:10.5px;padding:2px 8px;border-radius:9px;font-weight:700}
+.pp-num{position:absolute;right:6px;bottom:5px;font-size:11px;color:#fff;background:rgba(20,28,40,.55);padding:1px 7px;border-radius:8px}
+.pp-tools{position:absolute;right:4px;top:4px;display:flex;gap:2px;opacity:0;transition:.15s;background:rgba(255,255,255,.9);border-radius:9px;padding:2px}
+html.dark .pp-tools{background:rgba(40,50,66,.9)}
+.pp-card:hover .pp-tools,.pp-card:active .pp-tools{opacity:1}
+.pp-tools button{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.pp-tools button:hover{background:rgba(110,130,160,.18)}
+.pp-tools svg.ic{width:14px;height:14px}
+.pp-tools button:disabled{opacity:.3}/* ======= 小屏适配 ======= */
+@media (max-width:720px){
+  .home-hdr{padding:12px 14px 6px}
+  .home-tools,.home-filters{padding:0 14px}
+  .nb-grid{padding:6px 14px 80px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .nb-prev{height:110px}
+  .brand h1{font-size:17px}
+  .brand p{display:none}
+  .logo-mark{width:40px;height:40px;border-radius:12px}
+  .btn.primary span{display:none}
+  #btnNewNb{width:42px;padding:8px;justify-content:center}
+  .title-inp{max-width:26vw}
+  .pageinfo{display:none}
+  .ed-head .btn span{display:none}
+  .ed-head{padding:5px 6px}
+  .rail{left:6px;padding:5px 4px;border-radius:14px}
+  .toolbtn{width:40px;height:42px}
+  .toolbtn i{display:none}
+  .ctxcard{left:56px;right:56px;max-width:none;bottom:10px}
+  .zoombox{right:8px;bottom:10px;gap:3px}
+  .zoombox button{width:30px;height:30px}
+  .page-strip{bottom:8px;max-width:74%}
+  .selbar{top:6px}
+  .btn.slim span{display:none}
+  #btnPagePanel{width:38px;padding:6px;justify-content:center}
+  .page-panel{max-height:68%}
+  .pp-body{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+  .modal{padding:0}
+  .ctx-slider span{display:none}
+  .ctx-slider{max-width:110px}
+}
+@media (max-width:420px){
+  .toolbtn{width:38px;height:40px}
+  .ctxcard{left:52px;right:64px}
+  .ctx-slider.wide{min-width:0;flex:1}
+  .zoombox{right:6px;bottom:60px}
+  .page-strip{max-width:calc(100% - 16px)}
+}
+/* 触屏悬停残留修正 */
+@media (hover:none){
+  .toolbtn:hover,.strip-btn:hover,.zoombox button:hover{background:none}
+  .ctxmenu button:active{background:rgba(110,130,160,.2)}
+}
+/* 安全区 */
+@supports(padding:max(0px)){
+  .home-hdr{padding-top:max(16px,env(safe-area-inset-top))}
+  .ed-head{padding-top:max(6px,env(safe-area-inset-top))}
+  .page-panel{padding-bottom:env(safe-area-inset-bottom)}
+  #toast{bottom:max(24px,calc(env(safe-area-inset-bottom) + 12px))}
+}
+html,body{position:fixed;inset:0;width:100%}
+@media (min-width:721px){
+  html,body{position:static}
+  #app{position:fixed;inset:0}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast" role="status"></div>
+<script>
+/* FreeBoard 2.0 基础模块 */
+(function () {
+"use strict";
+var VERSION = "2.0.0";
+/* ---------- 工具函数 ---------- */
+function $(id) { return document.getElementById(id); }
+function qs(sel, root) { return (root || document).querySelector(sel); }
+function qsa(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+function fmtTime(t) { var d = new Date(t); function p(n) { return (n < 10 ? "0" : "") + n; } return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes()); }
+function genId() { return (Date.now().toString(36) + Math.random().toString(36).slice(2, 10)); }
+function debounce(fn, ms) { var t = 0; return function () { var a = arguments, s = this; clearTimeout(t); t = setTimeout(function () { fn.apply(s, a); }, ms); }; }
+function dist2(x1, y1, x2, y2) { var dx = x2 - x1, dy = y2 - y1; return dx * dx + dy * dy; }
+function segDist(x1, y1, x2, y2, px, py) {
+  var dx = x2 - x1, dy = y2 - y1;
+  if (dx === 0 && dy === 0) return Math.sqrt(dist2(px, py, x1, y1));
+  var t = clamp(((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy), 0, 1);
+  return Math.sqrt(dist2(px, py, x1 + t * dx, y1 + t * dy));
+}
+function bboxOf(pts) { var m = { x: 1e18, y: 1e18, x2: -1e18, y2: -1e18 }; for (var i = 0; i < pts.length; i++) { var p = pts[i]; if (p[0] < m.x) m.x = p[0]; if (p[1] < m.y) m.y = p[1]; if (p[0] > m.x2) m.x2 = p[0]; if (p[1] > m.y2) m.y2 = p[1]; } return m; }
+function roundRect(c, x, y, w, h, r) { r = Math.min(r, w / 2, h / 2); c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+function downloadFile(name, blob) {
+  var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+}
+function dataURLBlob(durl) { var i = durl.indexOf(","); var mime = durl.slice(5, i).split(";")[0]; var bin = atob(durl.slice(i + 1)); var arr = new Uint8Array(bin.length); for (var k = 0; k < bin.length; k++) arr[k] = bin.charCodeAt(k); return new Blob([arr], { type: mime }); }
+function toDataURL(blob) { return new Promise(function (ok, fail) { var r = new FileReader(); r.onload = function () { ok(r.result); }; r.onerror = fail; r.readAsDataURL(blob); }); }
+function fmtBytes(n) { if (n < 1024) return n + " B"; if (n < 1048576) return (n / 1024).toFixed(1) + " KB"; return (n / 1048576).toFixed(1) + " MB"; }
+/* ---------- 图标 ---------- */
+function ic(name, cls) {
+  var d = ICON[name] || "";
+  return '<svg class="ic ' + (cls || "") + '" viewBox="0 0 24 24" aria-hidden="true">' + d + "</svg>";
+}
+var ICON = {};
+function path(inner, extra) { return '<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"' + (extra || "") + ">" + inner + "</g>"; }
+ICON.menu = path('<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>');
+ICON.back = path('<polyline points="15 18 9 12 15 6"/>');
+ICON.close = path('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>');
+ICON.undo = path('<polyline points="9 14 4 9 9 4"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>');
+ICON.redo = path('<polyline points="15 14 20 9 15 4"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/>');
+ICON.pen = path('<path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><circle cx="11" cy="11" r="2"/>');
+ICON.pencil = path('<path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>');
+ICON.hl = path('<path d="M9 11l6 6"/><path d="M14 4l6 6-8.5 8.5a3.4 3.4 0 0 1-5 0l-.5-.5a3.4 3.4 0 0 1 0-5L14 4z"/>');
+ICON.eraser = path('<path d="M7 21h10"/><path d="M4.5 15.5L12 8l7.5 7.5a2 2 0 0 1 0 2.8L17 20.8H7l-2.5-2.5a2 2 0 0 1 0-2.8z"/><path d="M12 8L16.5 3.5a2.1 2.1 0 0 1 3 0l1.5 1.5a2.1 2.1 0 0 1 0 3L17 12"/>');
+ICON.select = path('<path d="M4 4l6 16 2-6 6-2z"/>');
+ICON.hand = path('<path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11"/><path d="M11 11V4.5a1.5 1.5 0 0 1 3 0V11"/><path d="M14 11.5V6a1.5 1.5 0 0 1 3 0v7.5"/><path d="M8 13a6 6 0 0 0 4 8h3a5 5 0 0 0 5-5v-6.5a1.5 1.5 0 0 0-3 0"/>');
+ICON.text = '<text x="12" y="17" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">T</text>';
+ICON.img = path('<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>');
+ICON.pdf = path('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><text x="12" y="18.5" text-anchor="middle" font-size="9" fill="currentColor" stroke="none" font-weight="700">PDF</text>');
+ICON.plus = path('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>');
+ICON.trash = path('<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>');
+ICON.dup = path('<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>');
+ICON.copy = path('<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>');
+ICON.folder = path('<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>');
+ICON.tag = path('<path d="M20.6 13.4L11 3H3v8l10.4 10.6a2 2 0 0 0 2.8 0l4.4-4.4a2 2 0 0 0 0-2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>');
+ICON.search = path('<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/>');
+ICON.more = path('<circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/>');
+ICON.zoomIn = path('<circle cx="11" cy="11" r="7"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="21" y1="21" x2="16.5" y2="16.5"/>');
+ICON.zoomOut = path('<circle cx="11" cy="11" r="7"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="21" y1="21" x2="16.5" y2="16.5"/>');
+ICON.fit = path('<path d="M4 9V4h5"/><path d="M20 9V4h-5"/><path d="M4 15v5h5"/><path d="M20 15v5h-5"/>');
+ICON.one = path('<circle cx="12" cy="12" r="9"/><line x1="12" y1="7" x2="12" y2="12"/><line x1="12" y1="12" x2="15.5" y2="14"/>');
+ICON.share = path('<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/>');
+ICON.download = path('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>');
+ICON.upload = path('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>');
+ICON.settings = path('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>');
+ICON.moon = path('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>');
+ICON.sun = path('<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/>');
+ICON.palette = path('<path d="M12 22a10 10 0 1 1 10-10c0 2-1.5 3-3 3h-2a2 2 0 0 0-1.5 3.3c.4.5.5 1 .5 1.7a2 2 0 0 1-2 2z"/><circle cx="7.5" cy="11.5" r="1"/><circle cx="11" cy="7.5" r="1"/><circle cx="15.5" cy="8.5" r="1"/>');
+ICON.check = path('<polyline points="20 6 9 17 4 12"/>');
+ICON.dots = path('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>');
+ICON.grid = path('<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/>');
+ICON.linePaper = path('<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="4" y1="8" x2="20" y2="8"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="16" x2="20" y2="16"/>');
+ICON.canvas = path('<rect x="3" y="5" width="18" height="14" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="16" x2="12" y2="16"/>');
+ICON.pages = path('<rect x="3" y="4" width="14" height="16" rx="2"/><path d="M7 2h11a2 2 0 0 1 2 2v14"/>');
+ICON.front = path('<path d="M3 3h12v12H3z"/><path d="M9 9h12v12H9z" opacity=".5"/>');
+ICON.back2 = path('<path d="M3 9h12v12H3z" opacity=".5"/><path d="M9 3h12v12H9z"/>');
+ICON.bold = '<text x="12" y="16" text-anchor="middle" font-size="13" font-weight="800" fill="currentColor">B</text>';
+ICON.italic = '<text x="12" y="16" text-anchor="middle" font-size="13" font-style="italic" font-weight="700" fill="currentColor">I</text>';
+ICON.under = path('<path d="M6 4v7a6 6 0 0 0 12 0V4"/><line x1="4" y1="20" x2="20" y2="20"/>');
+ICON.left = path('<line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="18" y2="18"/>');
+ICON.center = path('<line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="5" y1="18" x2="19" y2="18"/>');
+ICON.right = path('<line x1="4" y1="6" x2="20" y2="6"/><line x1="10" y1="12" x2="20" y2="12"/><line x1="6" y1="18" x2="20" y2="18"/>');
+ICON.stroke = path('<path d="M3 17c2 0 3-8 5-8s3 8 5 8 3-8 5-8 3 8 5 8"/>');
+ICON.width = path('<path d="M4 15c2 0 2-6 4-6s2 6 4 6 2-6 4-6 2 6 4 6"/>');
+ICON.opacity = path('<circle cx="12" cy="12" r="9" opacity=".35"/><circle cx="12" cy="12" r="4.5"/>');
+ICON.line = path('<line x1="5" y1="19" x2="19" y2="5"/>');
+ICON.arrow = path('<line x1="5" y1="19" x2="19" y2="5"/><polyline points="11 5 19 5 19 13"/>');
+ICON.rect = path('<rect x="4" y="6" width="16" height="12" rx="1"/>');
+ICON.oval = path('<ellipse cx="12" cy="12" rx="8" ry="6"/>');
+ICON.tri = path('<polygon points="12 4 21 19 3 19"/>');
+ICON.rotate = path('<polyline points="23 4 23 10 17 10"/><path d="M20.5 15a9 9 0 1 1-2-9.4L23 10"/>');
+ICON.star = path('<polygon points="12 2 15 9 22 9.3 16.5 14 18.5 21 12 17 5.5 21 7.5 14 2 9.3 9 9"/>');
+ICON.camera = path('<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>');
+ICON.eye = path('<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>');
+ICON.palm = path('<path d="M8 11V7a1.5 1.5 0 0 1 3 0v4"/><path d="M11 10.5V4.5a1.5 1.5 0 0 1 3 0v6"/><path d="M14 10V6.5a1.5 1.5 0 0 1 3 0V11"/><path d="M17 11.5V9a1.5 1.5 0 0 1 3 0v4a8 8 0 0 1-8 8h-1.5a5.5 5.5 0 0 1-5.2-3.7L4 12.5a1.7 1.7 0 0 1 3.2-1.1L8 13.5"/>');
+ICON.help = path('<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.4 2.3c-.8.4-.9 1-.9 1.7"/><circle cx="12" cy="17" r=".8" fill="currentColor" stroke="none"/>');
+ICON.rename = path('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>');
+ICON.doc = path('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/>');
+ICON.info = path('<circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="8" r=".8" fill="currentColor" stroke="none"/>');
+ICON.print = path('<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>');
+ICON.warn = path('<path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><circle cx="12" cy="17" r=".8" fill="currentColor" stroke="none"/>');/* ---------- 轻提示 ---------- */
+var toastTimer = 0;
+function toast(msg, ms) {
+  var t = $("toast"); if (!t) return;
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { t.classList.remove("show"); }, ms || 2200);
+}
+/* ---------- 模态框 ---------- */
+function modal(title, bodyHTML, opts) {
+  opts = opts || {};
+  var old = $("modalBox"); if (old) old.remove();
+  var m = document.createElement("div");
+  m.className = "modal-mask"; m.id = "modalBox";
+  m.innerHTML = '<div class="modal"><div class="modal-h"><div class="modal-t">' + esc(title) + '</div>' +
+    '<button class="iconbtn" data-act="close">' + ic("close") + "</button></div>" +
+    '<div class="modal-b">' + bodyHTML + "</div>" +
+    '<div class="modal-f">' + (opts.footer || "") + "</div></div>";
+  document.body.appendChild(m);
+  if (opts.noClose !== true) {
+    m.addEventListener("pointerdown", function (e) { if (e.target === m) closeModal(); });
+  }
+  qs('[data-act="close"]', m).onclick = closeModal;
+  if (opts.onOpen) opts.onOpen(m);
+  return m;
+}
+function closeModal() { var m = $("modalBox"); if (m) m.remove(); }
+function confirmBox(title, msg, onYes, yesLabel) {
+  var m = modal(title, '<div class="confirm-msg">' + msg + "</div>", {
+    footer: '<button class="btn ghost" data-act="no">取消</button><button class="btn danger" data-act="yes">' + esc(yesLabel || "删除") + "</button>",
+    noClose: true
+  });
+  qs('[data-act="no"]', m).onclick = closeModal;
+  qs('[data-act="yes"]', m).onclick = function () { closeModal(); onYes(); };
+}
+function promptBox(title, value, onOk, placeholder) {
+  var m = modal(title, '<input class="inp" id="promptInp" value="' + esc(value || "") + '" placeholder="' + esc(placeholder || "") + '" maxlength="40">', {
+    footer: '<button class="btn ghost" data-act="no">取消</button><button class="btn primary" data-act="ok">确定</button>',
+    onOpen: function (mm) { var i = $("promptInp"); i.focus(); i.select(); i.onkeydown = function (e) { if (e.key === "Enter") qs('[data-act="ok"]', mm).click(); }; }
+  });
+  qs('[data-act="no"]', m).onclick = closeModal;
+  qs('[data-act="ok"]', m).onclick = function () { closeModal(); onOk(($("promptInp") || {}).value || ""); };
+  return m;
+}
+/* ---------- 自定义颜色拾取 ---------- */
+function colorPickerHTML(cur, id, onPick) {
+  var base = ["#1a1a1a", "#ffffff", "#ef4444", "#f97316", "#facc15", "#22c55e", "#06b6d4", "#3b82f6", "#6366f1", "#a855f7", "#ec4899", "#8b5e34", "#94a3b8", "#111827", "#ffd7e0", "#d1fae5"];
+  var h = '<div class="cp-wrap" id="' + id + '">';
+  base.forEach(function (c) {
+    h += '<button class="cpt" style="background:' + c + '" data-c="' + c + '" ' + (c === cur ? 'data-on="1"' : "") + '></button>';
+  });
+  h += '<label class="cpt cust" title="自定义颜色"><input type="color" value="' + esc(cur && /^#[0-9a-fA-F]{6}$/.test(cur) ? cur : "#1a1a1a") + '"></label></div>';
+  var div = document.createElement("div"); div.innerHTML = h;
+  var box = div.firstChild;
+  qsa(".cpt", box).forEach(function (b) {
+    b.onclick = function (e) {
+      e.stopPropagation();
+      var c = b.getAttribute("data-c");
+      if (!c) return;
+      qsa(".cpt", box).forEach(function (x) { x.removeAttribute("data-on"); });
+      b.setAttribute("data-on", "1");
+      onPick(c);
+    };
+  });
+  var ci = qs('input[type="color"]', box);
+  if (ci) ci.oninput = function () {
+    var c = ci.value; qsa(".cpt", box).forEach(function (x) { x.removeAttribute("data-on"); });
+    ci.closest(".cpt").setAttribute("data-on", "1"); onPick(c);
+  };
+  return box;
+}
+/* ---------- 存储：IndexedDB + localStorage 回退 ---------- */
+var idb = null, idbFail = false, saveTimer = 0;
+function idbOpen() {
+  return new Promise(function (ok) {
+    if (idb) return ok(true);
+    if (idbFail || !window.indexedDB) return ok(false);
+    try {
+      var req = indexedDB.open("freeboard2", 1);
+      req.onupgradeneeded = function () {
+        var d = req.result;
+        if (!d.objectStoreNames.contains("kv")) d.createObjectStore("kv");
+      };
+      req.onsuccess = function () { idb = req.result; ok(true); };
+      req.onerror = function () { idbFail = true; ok(false); };
+    } catch (e) { idbFail = true; ok(false); }
+  });
+}
+function idbSet(k, v) {
+  return new Promise(function (ok) {
+    if (!idb) return ok(false);
+    try {
+      var tx = idb.transaction("kv", "readwrite");
+      tx.objectStore("kv").put(v, k);
+      tx.oncomplete = function () { ok(true); };
+      tx.onerror = function () { ok(false); };
+    } catch (e) { ok(false); }
+  });
+}
+function idbGet(k) {
+  return new Promise(function (ok) {
+    if (!idb) return ok(null);
+    try {
+      var tx = idb.transaction("kv", "readonly");
+      var r = tx.objectStore("kv").get(k);
+      r.onsuccess = function () { ok(r.result || null); };
+      r.onerror = function () { ok(null); };
+    } catch (e) { ok(null); }
+  });
+}
+function lsRead(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } }
+function lsWrite(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+var DB = { v: 2, folders: [], nbs: [], settings: { theme: "auto", palm: true, pinch: true } };
+function loadDB() { return idbOpen().then(function (ok) { return ok ? idbGet("db") : Promise.resolve(null); }).then(function (d) { if (d && d.v === 2) DB = d; DB.folders = DB.folders || []; DB.nbs = DB.nbs || []; DB.settings = DB.settings || {}; }); }
+function saveDB(now) {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(function () {
+    var json = JSON.stringify(DB);
+    idbOpen().then(function (ok) { return ok ? idbSet("db", DB) : Promise.resolve(lsWrite("db", DB)); });
+  }, now ? 0 : 350);
+}
+function findNb(id) { for (var i = 0; i < DB.nbs.length; i++) if (DB.nbs[i].id === id) return DB.nbs[i]; return null; }
+function pageOf(nb, pi) { return nb.pages[pi]; }
+function itemsOf(nb, pi) { var p = nb.pages[pi]; return p.items; }
+/* ---------- 纸张配置 ---------- */
+var PAPERS = [
+  { id: "plain", name: "空白", dark: false },
+  { id: "dot", name: "点阵", dark: false },
+  { id: "grid", name: "方格", dark: false },
+  { id: "line", name: "横线", dark: false },
+  { id: "cornell", name: "康奈尔", dark: false },
+  { id: "staff", name: "五线谱", dark: false },
+  { id: "dotD", name: "深色点阵", dark: true },
+  { id: "gridD", name: "深色方格", dark: true },
+  { id: "lineD", name: "深色横线", dark: true }
+];
+function paperCfg(id) {
+  var d = { color: "#ffffff", line: "#c3d2e2", dot: "#b9c6d6", grid: "#d4dce6", dark: false, name: "空白" };
+  switch (id) {
+    case "dot": case "grid": case "line": case "cornell": case "staff": break;
+    case "dotD": d.dark = true; d.color = "#1b2431"; d.dot = "#42536b"; break;
+    case "gridD": d.dark = true; d.color = "#1b2431"; d.grid = "#33445c"; break;
+    case "lineD": d.dark = true; d.color = "#1b2431"; d.line = "#3a4d68"; break;
+  }
+  for (var i = 0; i < PAPERS.length; i++) if (PAPERS[i].id === id) d.name = PAPERS[i].name;
+  return d;
+}
+var NB_COLORS = ["#4f7cff", "#16a34a", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#0ea5e9", "#475569"];
+var FONT_LIST = [["system-ui,-apple-system,'Segoe UI',Roboto,sans-serif", "默认"], ["'Noto Serif SC','Songti SC',serif", "宋体"], ["'Kaiti SC','KaiTi',serif", "楷体"], ["'FangSong','STFangsong',serif", "仿宋"], ["'Microsoft YaHei','PingFang SC',sans-serif", "黑体"], ["Georgia,serif", "Georgia"], ["'Courier New',monospace", "Courier"]];
+/* ---------- 快捷键与工具状态 ---------- */
+var SHAPE_OPTS = ["line", "arrow", "rect", "oval", "tri", "star"];
+function shapeName(s) { return { line: "直线", arrow: "箭头", rect: "矩形", oval: "椭圆", tri: "三角形", star: "星形" }[s] || s; }
+/* FreeBoard 2.0 状态与渲染 */
+var S = {
+  nb: null, pi: 0, tool: "pen", shape: "rect", typing: false, darkChrome: false,
+  conf: { color: "#1a1a1a", width: 4, opacity: 1, eraser: 22, txt: { fs: 22, color: "#1a1a1a", ff: 0, bold: false, italic: false, under: false, align: "left" } },
+  view: { z: 1, x: 0, y: 0 },
+  draw: null, pointers: {}, pinch: null, moved: false,
+  sel: { ids: [], x: 0, y: 0, x2: 0, y2: 0, mode: null, sx: 0, sy: 0, startIds: null, hand: -1, k: 1 },
+  hist: { u: [], r: [] }, undoT: 0,
+  lastAct: null, firstDownAt: 0, firstDownXY: null, canvasW: 0, canvasH: 0
+};
+function mkPage() { return { id: genId(), items: [] }; }
+function mkNb(name, paper) {
+  return { id: genId(), name: name || "未命名白板", color: NB_COLORS[Math.floor(Math.random() * NB_COLORS.length)], paper: paper || "plain", bgColor: "", tags: [], folder: "", createdAt: Date.now(), updatedAt: Date.now(), openedAt: Date.now(), page: 0, pages: [mkPage()] };
+}
+function curPage() { return S.nb ? S.nb.pages[S.pi] : null; }
+function curItems() { var p = curPage(); return p ? p.items : null; }
+function itemsById(id) { var a = curItems(); for (var i = 0; i < a.length; i++) if (a[i].id === id) return a[i]; return null; }
+function pageCount() { return S.nb ? S.nb.pages.length : 0; }
+function setTool(t, silent) {
+  S.tool = t; S.sel.ids = [];
+  if (!silent) { syncToolbar(); syncCtx(); updateCursor(); }
+}
+/* ---------- 视口与画布 ---------- */
+function cr() { var el = $("cvWrap"); return el ? el.getBoundingClientRect() : { left: 0, top: 0, width: 0, height: 0 }; }
+function resizeCanvas() {
+  var cv = $("cv"); if (!cv) return;
+  var r = cr(); var dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  var w = Math.max(1, Math.round(r.width)), h = Math.max(1, Math.round(r.height));
+  if (S.canvasW === w && S.canvasH === h && cv.width === Math.round(w * dpr)) return;
+  S.canvasW = w; S.canvasH = h;
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  cv.style.width = w + "px"; cv.style.height = h + "px";
+  requestRender();
+}
+function wx(px) { return (px - S.view.x) / S.view.z; }
+function wy(py) { return (py - S.view.y) / S.view.z; }
+function sx(x) { return x * S.view.z + S.view.x; }
+function sy(y) { return y * S.view.z + S.view.y; }
+function zoomAt(cx, cy, f) {
+  var z0 = S.view.z, z1 = clamp(z0 * f, 0.08, 8);
+  if (z1 === z0) return;
+  S.view.x = cx - (cx - S.view.x) * (z1 / z0);
+  S.view.y = cy - (cy - S.view.y) * (z1 / z0);
+  S.view.z = z1;
+  syncZoomUI(); requestRender(); updateCursor();
+}
+function zoomStep(d) {
+  var r = cr(), cx = r.width / 2, cy = r.height / 2;
+  zoomAt(cx, cy, d > 0 ? 1.3 : 1 / 1.3);
+}
+function fitView() {
+  var r = cr();
+  var b = contentBounds();
+  var z;
+  if (!b) { z = 1; S.view.x = r.width / 2; S.view.y = r.height / 2; }
+  else {
+    var pad = 70;
+    var bw = (b.x2 - b.x) + pad * 2, bh = (b.y2 - b.y) + pad * 2;
+    z = Math.min(r.width / Math.max(bw, 10), r.height / Math.max(bh, 10));
+    z = clamp(z, 0.05, 2);
+    S.view.x = r.width / 2 - (b.x + b.x2) / 2 * z;
+    S.view.y = r.height / 2 - (b.y + b.y2) / 2 * z;
+  }
+  S.view.z = z; syncZoomUI(); requestRender(); updateCursor();
+}
+function setZoom100() {
+  var r = cr();
+  var c = { x: r.width / 2, y: r.height / 2 };
+  var w = wx(c.x), h = wy(c.y);
+  S.view.z = 1; S.view.x = c.x - w; S.view.y = c.y - h;
+  syncZoomUI(); requestRender();
+}
+/* ---------- 内容边界 ---------- */
+function contentBounds(pi) {
+  var items = pi == null ? curItems() : S.nb.pages[pi].items;
+  if (!items || !items.length) return null;
+  var b = null;
+  items.forEach(function (it) {
+    var ib = itemBounds(it);
+    if (!ib) return;
+    if (!b) b = { x: ib.x, y: ib.y, x2: ib.x + ib.w, y2: ib.y + ib.h };
+    else { b.x = Math.min(b.x, ib.x); b.y = Math.min(b.y, ib.y); b.x2 = Math.max(b.x2, ib.x + ib.w); b.y2 = Math.max(b.y2, ib.y + ib.h); }
+  });
+  return b;
+}
+/* ---------- 渲染调度 ---------- */
+var renderQueued = false, patternCache = {};
+function requestRender() {
+  if (renderQueued || !S.nb) return;
+  renderQueued = true;
+  requestAnimationFrame(function () { renderQueued = false; if (S.nb && $("cv")) render(); });
+}
+function clearPatternCache() { patternCache = {}; }
+function paperTile(cfg) {
+  var key = cfg.id + cfg.color + "|" + (cfg.dot || "") + "|" + (cfg.grid || "") + "|" + (cfg.line || "");
+  if (patternCache[key]) return patternCache[key];
+  var size = cfg.id === "staff" ? 320 : (cfg.id === "dot" ? 64 : 128);
+  var t = document.createElement("canvas"); t.width = size; t.height = size;
+  var c = t.getContext("2d");
+  c.fillStyle = cfg.color; c.fillRect(0, 0, size, size);
+  c.strokeStyle = cfg.line; c.fillStyle = cfg.dot; c.strokeStyle = cfg.grid;
+  if (cfg.id === "dot" || cfg.id === "dotD") {
+    c.fillStyle = cfg.dot;
+    for (var i = 0; i < size; i += 24) for (var j = 0; j < size; j += 24) { c.beginPath(); c.arc(i + 12, j + 12, 1.6, 0, 6.2832); c.fill(); }
+  } else if (cfg.id === "grid" || cfg.id === "gridD") {
+    c.strokeStyle = cfg.grid; c.lineWidth = 1;
+    for (var gi = 0; gi <= size; gi += 48) { c.beginPath(); c.moveTo(gi + 0.5, 0); c.lineTo(gi + 0.5, size); c.stroke(); c.beginPath(); c.moveTo(0, gi + 0.5); c.lineTo(size, gi + 0.5); c.stroke(); }
+  } else if (cfg.id === "line" || cfg.id === "lineD") {
+    c.strokeStyle = cfg.line; c.lineWidth = 1;
+    for (var li = 24; li < size; li += 48) { c.beginPath(); c.moveTo(0, li + 0.5); c.lineTo(size, li + 0.5); c.stroke(); }
+  } else if (cfg.id === "staff") {
+    c.strokeStyle = cfg.line; c.lineWidth = 1.4;
+    for (var k = 0; k < 5; k++) { var y = 20 + k * 14; c.beginPath(); c.moveTo(0, y + 0.5); c.lineTo(size, y + 0.5); c.stroke(); }
+    for (var k2 = 0; k2 < size; k2 += 160) { var y2 = 20 + 5 * 14 + 26; c.beginPath(); c.moveTo(0, k2 + y2); c.lineTo(size, k2 + y2); c.stroke(); }
+  }
+  var p = document.createElement("canvas"); p.width = t.width; p.height = t.height;
+  p.getContext("2d").drawImage(t, 0, 0);
+  patternCache[key] = { canvas: p, w: size, h: size };
+  return patternCache[key];
+}
+function renderPaper(c) {
+  var cfg = paperCfg(S.nb.paper);
+  var x0 = wx(0), y0 = wy(0), x1 = wx(S.canvasW), y1 = wy(S.canvasH);
+  var w = x1 - x0, h = y1 - y0;
+  c.fillStyle = cfg.color;
+  c.fillRect(x0, y0, w, h);
+  if (cfg.id === "cornell") { /* 康奈尔：通栏横线+左侧栏 */ }
+  if (cfg.id !== "plain" && cfg.id !== "cornell") {
+    var tile = paperTile(cfg);
+    c.save(); c.beginPath(); c.rect(x0, y0, w, h); c.clip();
+    var pw = tile.w, ph = tile.h;
+    var px = Math.floor(x0 / pw) * pw, py = Math.floor(y0 / ph) * ph;
+    var pat = c.createPattern(tile.canvas, "repeat");
+    c.translate(-px, -py);
+    c.fillStyle = pat;
+    c.fillRect(px, py, Math.ceil(w / pw + 2) * pw, Math.ceil(h / ph + 2) * ph);
+    c.restore();
+  }
+  if (cfg.id === "cornell") {
+    c.save();
+    c.strokeStyle = cfg.line; c.lineWidth = 1;
+    var sy0 = Math.floor(y0 / 52) * 52;
+    for (var ly = sy0; ly < y1; ly += 52) { c.beginPath(); c.moveTo(x0, ly + 0.5); c.lineTo(x1, ly + 0.5); c.stroke(); }
+    var mx = x0 + w * 0.26;
+    c.beginPath(); c.moveTo(mx, y0); c.lineTo(mx, y1); c.stroke();
+    c.restore();
+  }
+}
+/* FreeBoard 2.0 笔迹/元素绘制 */
+var imgCache = {};
+function imgEl(src) {
+  if (imgCache[src]) return imgCache[src];
+  var im = new Image();
+  im.onload = function () { requestRender(); };
+  im.src = src;
+  imgCache[src] = im;
+  return im;
+}
+function fontStr(fs, bold, italic, ffIdx) {
+  var fam = (FONT_LIST[ffIdx] || FONT_LIST[0])[0];
+  return (italic ? "italic " : "") + (bold ? "700" : "400") + " " + fs + "px " + fam;
+}
+function wrapLines(text, ctx, fs, maxW) {
+  var out = [];
+  var paras = String(text || "").split("\n");
+  for (var i = 0; i < paras.length; i++) {
+    var para = paras[i];
+    if (para === "") { out.push(""); continue; }
+    var words = para.split(/(\s+)/);
+    var line = "";
+    for (var j = 0; j < words.length; j++) {
+      var w = words[j];
+      if (!w) continue;
+      var t = line ? line + w : w;
+      if (ctx.measureText(t).width > maxW && line) {
+        if (w.length > 1 && !/^[\s\u4e00-\u9fff]/.test(w)) { out.push(line); line = w; }
+        else {
+          var cur = line;
+          for (var k = 0; k < w.length; k++) {
+            var tt = cur + w[k];
+            if (ctx.measureText(tt).width > maxW && cur) { out.push(cur); cur = w[k]; }
+            else cur = tt;
+          }
+          line = cur;
+        }
+      } else line = t;
+    }
+    out.push(line);
+  }
+  return out;
+}
+function paintStroke(c, st, active) {
+  var pts = st.pts;
+  if (!pts || pts.length < 2) {
+    if (pts && pts.length === 1) {
+      c.beginPath(); c.arc(pts[0][0], pts[0][1], (st.w || 2) / 2, 0, 6.2832); c.fill();
+    }
+    return;
+  }
+  var hl = st.kind === "hl";
+  c.save();
+  c.globalAlpha = st.op == null ? 1 : st.op;
+  if (hl) {
+    var paperDark = paperCfg(S.nb.paper).dark;
+    c.globalCompositeOperation = paperDark ? "screen" : "multiply";
+  }
+  c.strokeStyle = st.color; c.fillStyle = st.color;
+  c.lineCap = "round"; c.lineJoin = "round";
+  if (st.kind === "shape") { paintShape(c, st); c.restore(); return; }
+  var pencil = st.kind === "pencil";
+  c.lineWidth = st.w;
+  for (var i = 1; i < pts.length; i++) {
+    var a = pts[i - 1], b = pts[i];
+    if (a[0] === b[0] && a[1] === b[1]) continue;
+    var p1 = a[2] == null ? 0.5 : a[2], p2 = b[2] == null ? 0.5 : b[2];
+    var w1 = st.w * (0.72 + 0.55 * p1), w2 = st.w * (0.72 + 0.55 * p2);
+    if (pencil) { w1 *= 0.82; w2 *= 0.82; }
+    c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]);
+    c.lineWidth = (w1 + w2) / 2;
+    c.stroke();
+    if (pencil) {
+      c.globalAlpha = (st.op == null ? 1 : st.op) * 0.5;
+      c.beginPath(); c.arc((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (w1 + w2) / 6, 0, 6.2832); c.fill();
+      c.globalAlpha = st.op == null ? 1 : st.op;
+    }
+  }
+  if (pts.length === 1) { c.beginPath(); c.arc(pts[0][0], pts[0][1], st.w / 2, 0, 6.2832); c.fill(); }
+  c.restore();
+}
+function paintShape(c, st) {
+  var a = st.pts[0], b = st.pts[st.pts.length - 1];
+  var x = Math.min(a[0], b[0]), y = Math.min(a[1], b[1]), w = Math.abs(b[0] - a[0]), h = Math.abs(b[1] - a[1]);
+  c.lineWidth = st.w; c.strokeStyle = st.color;
+  c.beginPath();
+  if (st.shape === "line" || st.shape === "arrow") {
+    c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]);
+    c.stroke();
+    if (st.shape === "arrow") {
+      var ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
+      var len = Math.max(14, st.w * 3.2);
+      c.beginPath();
+      c.moveTo(b[0], b[1]);
+      c.lineTo(b[0] - len * Math.cos(ang - 0.42), b[1] - len * Math.sin(ang - 0.42));
+      c.moveTo(b[0], b[1]);
+      c.lineTo(b[0] - len * Math.cos(ang + 0.42), b[1] - len * Math.sin(ang + 0.42));
+      c.stroke();
+    }
+  } else if (st.shape === "rect") {
+    c.rect(x, y, w, h); c.stroke();
+  } else if (st.shape === "oval") {
+    c.ellipse((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, w / 2, h / 2, 0, 0, 6.2832); c.stroke();
+  } else if (st.shape === "tri") {
+    c.moveTo((a[0] + b[0]) / 2, a[1]); c.lineTo(b[0], b[1]); c.lineTo(a[0], b[1]); c.closePath(); c.stroke();
+  } else if (st.shape === "star") {
+    var cx = (a[0] + b[0]) / 2, cy = (a[1] + b[1]) / 2, R = Math.max(w, h) / 2, r = R * 0.42;
+    for (var i = 0; i < 10; i++) {
+      var ang2 = -Math.PI / 2 + i * Math.PI / 5;
+      var rad = i % 2 === 0 ? R : r;
+      var px = cx + rad * Math.cos(ang2), py = cy + rad * Math.sin(ang2);
+      if (i === 0) c.moveTo(px, py); else c.lineTo(px, py);
+    }
+    c.closePath(); c.stroke();
+  } else {
+    c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke();
+  }
+}
+function paintImg(c, it) {
+  var im = imgEl(it.src);
+  if (!im || !im.complete || !im.naturalWidth) return;
+  c.save();
+  if (it.rot) { c.translate(it.x + it.w / 2, it.y + it.h / 2); c.rotate(it.rot); c.translate(-(it.x + it.w / 2), -(it.y + it.h / 2)); }
+  c.drawImage(im, it.x, it.y, it.w, it.h);
+  c.restore();
+}
+function paintTxt(c, it) {
+  if (!it.text) return;
+  c.save();
+  var fs = it.fs, lineH = fs * 1.32;
+  c.font = fontStr(fs, it.bold, it.italic, it.ff);
+  c.fillStyle = it.color;
+  c.textBaseline = "alphabetic";
+  var maxW = it.w || 800;
+  var lines = wrapLines(it.text, c, fs, maxW);
+  var h = lines.length * lineH;
+  it.h = h;
+  if (it.rot) { c.translate(it.x + maxW / 2, it.y + h / 2); c.rotate(it.rot); c.translate(-(it.x + maxW / 2), -(it.y + h / 2)); }
+  for (var i = 0; i < lines.length; i++) {
+    var y = it.y + (i + 1) * lineH * 0.94;
+    var x = it.x;
+    if (it.align === "center") x = it.x + maxW / 2;
+    else if (it.align === "right") x = it.x + maxW;
+    c.textAlign = it.align === "left" ? "left" : it.align === "center" ? "center" : "right";
+    c.fillText(lines[i], x, y);
+    if (it.under) {
+      var tw = c.measureText(lines[i]).width;
+      var tx = it.align === "left" ? x : it.align === "center" ? x - tw / 2 : x - tw;
+      c.fillRect(tx, y + fs * 0.16, tw, Math.max(1, fs * 0.06));
+    }
+  }
+  c.restore();
+}
+function paintItem(c, it) {
+  if (it.t === "s") paintStroke(c, it);
+  else if (it.t === "i") paintImg(c, it);
+  else if (it.t === "x") paintTxt(c, it);
+}
+function itemBounds(it) {
+  if (it.t === "s") {
+    if (it.kind === "shape" && it.pts.length >= 2) {
+      var bb = bboxOf(it.pts);
+      return { x: bb.x - it.w / 2, y: bb.y - it.w / 2, w: (bb.x2 - bb.x) + it.w, h: (bb.y2 - bb.y) + it.w };
+    }
+    if (!it.pts || !it.pts.length) return null;
+    var b = bboxOf(it.pts);
+    var pad = it.w / 2 + 2;
+    return { x: b.x - pad, y: b.y - pad, w: b.x2 - b.x + pad * 2, h: b.y2 - b.y + pad * 2 };
+  }
+  if (it.t === "i") return { x: it.x, y: it.y, w: it.w, h: it.h };
+  if (it.t === "x") {
+    var fs = it.fs;
+    var cctx = txtMeasureCtx();
+    cctx.font = fontStr(fs, it.bold, it.italic, it.ff);
+    var lines = wrapLines(it.text, cctx, fs, it.w || 800);
+    return { x: it.x, y: it.y, w: it.w || 800, h: Math.max(fs * 1.4, lines.length * fs * 1.32) };
+  }
+  return null;
+}
+var _mctx = null;
+function txtMeasureCtx() {
+  if (!_mctx) { _mctx = document.createElement("canvas").getContext("2d"); }
+  return _mctx;
+}/* ---------- 主渲染 ---------- */
+var OVER_COLOR = "#3b82f6";
+function render() {
+  var cv = $("cv");
+  if (!cv || !S.nb) return;
+  var ctx = cv.getContext("2d");
+  var dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.setTransform(S.view.z * dpr, 0, 0, S.view.z * dpr, S.view.x * dpr, S.view.y * dpr);
+  renderPaper(ctx);
+  var items = curItems();
+  if (items) for (var i = 0; i < items.length; i++) {
+    if (S.sel.ids.indexOf(items[i].id) >= 0 && S.sel.mode === "marquee") continue;
+    paintItem(ctx, items[i]);
+  }
+  if (S.draw && S.draw.pts && S.draw.pts.length) paintStroke(ctx, S.draw);
+  if (S.sel.mode === "marquee") {
+    ctx.save();
+    ctx.strokeStyle = OVER_COLOR; ctx.lineWidth = 1.5 / S.view.z;
+    ctx.setLineDash([6 / S.view.z, 5 / S.view.z]);
+    ctx.strokeRect(S.sel.x, S.sel.y, S.sel.x2 - S.sel.x, S.sel.y2 - S.sel.y);
+    ctx.restore();
+  }
+  if (S.tool === "select" && S.sel.ids.length && S.sel.mode !== "marquee") drawSelection(ctx);
+  if (S.tool === "hand" || S.tool === "select") {} else { drawToolCursor(ctx); }
+}
+function drawToolCursor(c) { /* 落笔圆点提示由CSS/指针事件绘制 */ }
+function selBoxWorld() {
+  var ids = S.sel.ids, b = null;
+  for (var i = 0; i < ids.length; i++) {
+    var it = itemsById(ids[i]); if (!it) continue;
+    var ib = itemBounds(it); if (!ib) continue;
+    if (it.rot && (it.t === "i" || it.t === "x")) {
+      var cx = ib.x + ib.w / 2, cy = ib.y + ib.h / 2, cos = Math.cos(it.rot), sin = Math.sin(it.rot);
+      var corners = [[ib.x, ib.y], [ib.x + ib.w, ib.y], [ib.x + ib.w, ib.y + ib.h], [ib.x, ib.y + ib.h]];
+      for (var k = 0; k < 4; k++) {
+        var px = corners[k][0] - cx, py = corners[k][1] - cy;
+        corners[k] = [cx + px * cos - py * sin, cy + px * sin + py * cos];
+      }
+      ib = bboxOf(corners);
+    }
+    if (!b) b = { x: ib.x, y: ib.y, x2: ib.x + ib.w, y2: ib.y + ib.h };
+    else { b.x = Math.min(b.x, ib.x); b.y = Math.min(b.y, ib.y); b.x2 = Math.max(b.x2, ib.x + ib.w); b.y2 = Math.max(b.y2, ib.y + ib.h); }
+  }
+  return b;
+}
+function drawSelection(c) {
+  var b = selBoxWorld(); if (!b) return;
+  var hs = 10 / S.view.z;
+  var x = b.x - hs / 2, y = b.y - hs / 2, w = b.x2 - b.x + hs, h = b.y2 - b.y + hs;
+  c.save();
+  c.strokeStyle = OVER_COLOR; c.lineWidth = 1.6 / S.view.z;
+  c.setLineDash([5 / S.view.z, 4 / S.view.z]);
+  c.strokeRect(x, y, w, h);
+  c.setLineDash([]);
+  var rh = b.y - 30 / S.view.z;
+  c.beginPath(); c.moveTo((b.x + b.x2) / 2, b.y); c.lineTo((b.x + b.x2) / 2, rh); c.stroke();
+  c.beginPath(); c.arc((b.x + b.x2) / 2, rh, 5.5 / S.view.z, 0, 6.2832); c.stroke();
+  var handles = [[x, y], [x + w / 2, y], [x + w, y], [x + w, y + h / 2], [x + w, y + h], [x + w / 2, y + h], [x, y + h], [x, y + h / 2]];
+  for (var i = 0; i < handles.length; i++) {
+    c.fillStyle = "#fff"; c.strokeStyle = OVER_COLOR; c.lineWidth = 1.5 / S.view.z;
+    c.beginPath(); c.rect(handles[i][0] - hs / 2, handles[i][1] - hs / 2, hs, hs); c.fill(); c.stroke();
+  }
+  c.restore();
+}
+function hitHandle(wx0, wy0) {
+  var b = selBoxWorld(); if (!b) return null;
+  var hs = 10 / S.view.z, tol = 14 / S.view.z;
+  var x = b.x - hs / 2, y = b.y - hs / 2, w = b.x2 - b.x + hs, h = b.y2 - b.y + hs;
+  var pts = { nw: [x, y], n: [x + w / 2, y], ne: [x + w, y], e: [x + w, y + h / 2], se: [x + w, y + h], s: [x + w / 2, y + h], sw: [x, y + h], w: [x, y + h / 2] };
+  for (var k in pts) if (Math.abs(pts[k][0] - wx0) <= tol && Math.abs(pts[k][1] - wy0) <= tol) return { t: "scale", dir: k };
+  var rh = b.y - 30 / S.view.z, rcx = (b.x + b.x2) / 2;
+  if (Math.abs(rcx - wx0) <= tol + 4 / S.view.z && Math.abs(rh - wy0) <= tol + 4 / S.view.z) return { t: "rot" };
+  return null;
+}
+/* ---------- 几何变换 ---------- */
+function rotPt(px, py, cx, cy, cos, sin) { return [cx + (px - cx) * cos - (py - cy) * sin, cy + (px - cx) * sin + (py - cy) * cos]; }
+function moveItem(it, dx, dy) {
+  if (it.t === "s") { for (var i = 0; i < it.pts.length; i++) { it.pts[i][0] += dx; it.pts[i][1] += dy; } }
+  else { it.x += dx; it.y += dy; }
+}
+function scaleItem(it, cx, cy, k) {
+  if (it.t === "s") {
+    for (var i = 0; i < it.pts.length; i++) { it.pts[i][0] = cx + (it.pts[i][0] - cx) * k; it.pts[i][1] = cy + (it.pts[i][1] - cy) * k; }
+  } else if (it.t === "i") {
+    var nx = cx + (it.x - cx) * k, ny = cy + (it.y - cy) * k;
+    it.x = nx; it.y = ny; it.w *= k; it.h *= k;
+  } else if (it.t === "x") {
+    var nx2 = cx + (it.x - cx) * k, ny2 = cy + (it.y - cy) * k;
+    it.x = nx2; it.y = ny2; it.w = Math.max(20, it.w * k); it.fs = clamp(it.fs * k, 8, 160);
+  }
+}
+function rotateItem(it, cx, cy, rad) {
+  if (it.t === "s") {
+    var cos = Math.cos(rad), sin = Math.sin(rad);
+    for (var i = 0; i < it.pts.length; i++) { var p = rotPt(it.pts[i][0], it.pts[i][1], cx, cy, cos, sin); it.pts[i][0] = p[0]; it.pts[i][1] = p[1]; }
+  } else {
+    var p2 = rotPt(it.x, it.y, cx, cy, Math.cos(rad), Math.sin(rad));
+    it.x = p2[0]; it.y = p2[1];
+    it.rot = (it.rot || 0) + rad;
+  }
+}
+/* ---------- 命中测试 ---------- */
+function hitItem(it, x, y) {
+  if (it.t === "s") {
+    var tol = Math.max(6, 12 / S.view.z) + it.w / 2;
+    if (it.kind === "shape" && it.pts.length > 1) {
+      var sname = it.shape;
+      if (sname === "rect" || sname === "oval" || sname === "tri" || sname === "star") {
+        var ib = itemBounds(it);
+        return x >= ib.x - tol && x <= ib.x + ib.w + tol && y >= ib.y - tol && y <= ib.y + ib.h + tol;
+      }
+      return segDist(it.pts[0][0], it.pts[0][1], it.pts[it.pts.length - 1][0], it.pts[it.pts.length - 1][1], x, y) <= tol + 4;
+    }
+    var pts = it.pts;
+    for (var i = 1; i < pts.length; i++) if (segDist(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1], x, y) <= tol) return true;
+    if (pts.length === 1) return Math.sqrt(dist2(x, y, pts[0][0], pts[0][1])) <= tol;
+    return false;
+  }
+  var b = itemBounds(it);
+  return b && x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;
+}
+function hitTop(x, y, skipIds) {
+  var items = curItems();
+  for (var i = items.length - 1; i >= 0; i--) {
+    var it = items[i];
+    if (skipIds && skipIds.indexOf(it.id) >= 0) continue;
+    if (hitItem(it, x, y)) return it;
+  }
+  return null;
+}
+function insideMarquee(it, x1, y1, x2, y2) {
+  var b = itemBounds(it); if (!b) return false;
+  return b.x >= x1 && b.y >= y1 && b.x + b.w <= x2 && b.y + b.h <= y2;
+}
+/* FreeBoard 2.0 指针交互（重写） */
+var palmTimer = 0, wheelLock = false;
+function strokeKindOf(tool) { return tool === "pen" ? "pen" : tool === "pencil" ? "pencil" : tool === "hl" ? "hl" : tool === "shape" ? "shape" : "pen"; }
+function draftStroke() {
+  var st = { id: genId(), t: "s", kind: strokeKindOf(S.tool) };
+  if (st.kind === "shape") { st.shape = S.shape; st.w = Math.max(2, S.conf.width * 1.5); }
+  else st.w = Math.max(1.2, S.conf.width);
+  st.color = S.conf.color; st.op = S.conf.opacity; st.pts = [];
+  return st;
+}
+function pointerPos(e) {
+  var r = cr();
+  var px = e.clientX - r.left, py = e.clientY - r.top;
+  return { px: px, py: py, wx: wx(px), wy: wy(py) };
+}
+function setupCanvasEvents() {
+  var cv = $("cv");
+  cv.addEventListener("pointerdown", onPD);
+  cv.addEventListener("pointermove", onPM);
+  cv.addEventListener("pointerup", onPU);
+  cv.addEventListener("pointercancel", onPC);
+  cv.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+  cv.addEventListener("wheel", onWheel, { passive: false });
+  cv.addEventListener("dblclick", onDbl);
+  document.addEventListener("keydown", onKeyDown);
+  document.addEventListener("paste", onPasteDoc);
+  window.addEventListener("resize", debounce(resizeCanvas, 150));
+  window.addEventListener("blur", function () { cancelPending(); });
+  document.addEventListener("pointerup", function () { /* 兜底 */ });
+}
+function onDbl(e) {
+  if (!S.nb || S.tool !== "select") return;
+  var p = pointerPos(e);
+  var it = hitTop(p.wx, p.wy);
+  if (it && it.t === "x") beginTextEdit(it, e.clientX, e.clientY);
+}
+function onWheel(e) {
+  if (!S.nb || S.typing) return;
+  e.preventDefault();
+  var r = cr();
+  var px = e.clientX - r.left, py = e.clientY - r.top;
+  if (e.ctrlKey || e.metaKey) zoomAt(px, py, Math.exp(-e.deltaY * 0.0022));
+  else { S.view.x -= e.deltaX; S.view.y -= e.deltaY; requestRender(); syncZoomUI(); }
+}
+function markStarted(pid, started) {
+  var p = S.pointers[pid];
+  if (p) p.started = started;
+}
+function onPD(e) {
+  if (!S.nb || S.typing) return;
+  if (e.button === 2) return;
+  e.preventDefault();
+  var p = pointerPos(e);
+  S.pointers[e.pointerId] = { x: p.px, y: p.py, started: e.pointerType !== "touch" };
+  if (Object.keys(S.pointers).length >= 2) { startPinch(e); return; }
+  S.moved = false; S.downAt = Date.now();
+  S.downXY = [p.px, p.py]; S.downW = [p.wx, p.wy]; S.curPid = e.pointerId;
+  if (e.pointerType === "touch") {
+    clearTimeout(palmTimer);
+    var pid = e.pointerId, dx0 = p.px, dy0 = p.py;
+    palmTimer = setTimeout(function () {
+      var pt = S.pointers[pid];
+      if (!pt) return;
+      if (Date.now() - S.downAt >= 70 && Math.abs(pt.x - dx0) < 12 && Math.abs(pt.y - dy0) < 12) {
+        pt.started = true;
+        if (!S.act && !S.moved) beginAction(e, { px: pt.x, py: pt.y, wx: wx(pt.x), wy: wy(pt.y) });
+      }
+    }, 75);
+  } else {
+    beginAction(e, p);
+  }
+}
+function onPM(e) {
+  if (!S.nb) return;
+  var pt = S.pointers[e.pointerId];
+  if (!pt) return;
+  var p = pointerPos(e);
+  var keys = Object.keys(S.pointers);
+  if (keys.length >= 2) { if (S.pinch) pinchMove(p); pt.x = p.px; pt.y = p.py; return; }
+  if (S.pinch) { S.pinch = null; return; }
+  var dxs = p.px - S.downXY[0], dys = p.py - S.downXY[1];
+  if (!S.moved && Math.sqrt(dxs * dxs + dys * dys) > 4) {
+    S.moved = true;
+    if (!pt.started) { pt.dead = true; cancelPending(); return; }
+  }
+  if (pt.dead) return;
+  pt.x = p.px; pt.y = p.py;
+  toolMove(e, p, dxs, dys);
+  S.curPid = e.pointerId;
+}
+function onPU(e) {
+  var pid = e.pointerId;
+  var keys = Object.keys(S.pointers);
+  if (keys.length >= 2) {
+    delete S.pointers[pid];
+    keys = Object.keys(S.pointers);
+    if (keys.length === 1 && S.pinch) {
+      var kp = S.pointers[keys[0]];
+      kp.started = true;
+      S.downXY = [kp.x, kp.y]; S.downW = [wx(kp.x), wy(kp.y)];
+    }
+    if (keys.length < 2) S.pinch = null;
+    return;
+  }
+  if (!S.pointers[pid]) return;
+  toolUp(e);
+  delete S.pointers[pid];
+  if (!Object.keys(S.pointers).length) { S.pinch = null; S.act = null; }
+  clearTimeout(palmTimer);
+}
+function onPC(e) {
+  cancelPending();
+  delete S.pointers[e.pointerId];
+  if (!Object.keys(S.pointers).length) { S.pinch = null; S.act = null; }
+}
+function startPinch(e) {
+  cancelPending();
+  var ids = Object.keys(S.pointers);
+  if (ids.length < 2) return;
+  var a = S.pointers[ids[0]], b = S.pointers[ids[1]];
+  var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+  S.pinch = { d: Math.max(1, Math.sqrt(dist2(a.x, a.y, b.x, b.y))), z0: S.view.z, w0: wx(mx), h0: wy(my) };
+}
+function pinchMove(p) {
+  var ids = Object.keys(S.pointers);
+  if (ids.length < 2 || !S.pinch) return;
+  var a = S.pointers[ids[0]], b = S.pointers[ids[1]];
+  var d = Math.max(1, Math.sqrt(dist2(a.x, a.y, b.x, b.y)));
+  var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+  S.view.z = clamp(S.pinch.z0 * d / S.pinch.d, 0.08, 8);
+  S.view.x = mx - S.pinch.w0 * S.view.z;
+  S.view.y = my - S.pinch.h0 * S.view.z;
+  syncZoomUI(); requestRender(); updateCursor();
+}
+function updateCursor() {
+  var cv = $("cv"); if (!cv) return;
+  var cls = S.tool === "hand" ? "cursor-grab" : S.tool === "select" ? "cursor-default" : "cursor-cross";
+  cv.classList.remove("cursor-grab", "cursor-default", "cursor-cross");
+  cv.classList.add(cls);
+}
+function cancelPending() {
+  if (S.act) {
+    var a = S.act;
+    if (a.type === "draw" || a.type === "erase" || a.mutated === false && (a.type === "move" || a.type === "scale" || a.type === "rot")) cancelHist();
+    else if (a.type !== "draw" && a.type !== "erase" && a.mutated) dirty();
+    S.act = null;
+  }
+  S.draw = null;
+}
+/* ---------- 动作开始 ---------- */
+function beginAction(e, p) {
+  if (S.tool === "hand") { S.act = { type: "pan" }; return; }
+  if (S.tool === "text") { S.act = { type: "text" }; return; }
+  if (S.tool === "select") {
+    var h = hitHandle(p.wx, p.wy);
+    if (h && S.sel.ids.length) {
+      var b = selBoxWorld();
+      histPush();
+      S.act = { type: "scale", dir: h.dir, cx: (b.x + b.x2) / 2, cy: (b.y + b.y2) / 2, k0: Math.max(1e-3, Math.max(Math.abs(p.wx - (b.x + b.x2) / 2), Math.abs(p.wy - (b.y + b.y2) / 2))), snap: snapSel() };
+      if (h.t === "rot") {
+        S.act = { type: "rot", cx: (b.x + b.x2) / 2, cy: (b.y + b.y2) / 2, a0: Math.atan2(p.wy - (b.y + b.y2) / 2, p.wx - (b.x + b.x2) / 2), snap: snapSel() };
+      }
+      return;
+    }
+    var it = hitTop(p.wx, p.wy, S.sel.ids.length && (e.shiftKey || e.ctrlKey) ? S.sel.ids : null);
+    if (it) {
+      if (e.shiftKey || e.ctrlKey) {
+        var i2 = S.sel.ids.indexOf(it.id);
+        if (i2 >= 0) S.sel.ids.splice(i2, 1); else S.sel.ids.push(it.id);
+      } else if (S.sel.ids.indexOf(it.id) < 0) S.sel.ids = [it.id];
+      if (S.sel.ids.length) { histPush(); S.act = { type: "move", snap: snapSel() }; }
+      requestRender(); return;
+    }
+    S.sel.ids = [];
+    S.sel.mode = "marquee";
+    S.sel.x = p.wx; S.sel.y = p.wy; S.sel.x2 = p.wx; S.sel.y2 = p.wy;
+    S.act = { type: "marquee" };
+    requestRender(); return;
+  }
+  if (S.tool === "eraser") {
+    histPush();
+    S.act = { type: "erase", mutated: false };
+    eraseAt(p.wx, p.wy);
+    return;
+  }
+  /* 画笔/荧光笔/形状 */
+  histPush();
+  var st = draftStroke();
+  st.pts.push([p.wx, p.wy, e.pressure > 0 ? Math.min(1, e.pressure) : 0.5]);
+  S.draw = st;
+  S.act = { type: "draw" };
+  requestRender();
+}
+function snapSel() {
+  var m = {};
+  var items = curItems();
+  S.sel.ids.forEach(function (id) {
+    for (var i = 0; i < items.length; i++) if (items[i].id === id) m[id] = JSON.parse(JSON.stringify(items[i]));
+  });
+  return m;
+}
+function applySel(fn) {
+  var items = curItems();
+  S.sel.ids.forEach(function (id) {
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].id === id && S.act.snap[id]) {
+        var obj = JSON.parse(JSON.stringify(S.act.snap[id]));
+        fn(obj);
+        items[i] = obj;
+        break;
+      }
+    }
+  });
+  requestRender();
+}
+/* ---------- 动作移动 ---------- */
+function toolMove(e, p, dxs, dys) {
+  var a = S.act;
+  if (!a) return;
+  if (a.type === "pan") {
+    if (!a.last) a.last = { x: S.downXY[0], y: S.downXY[1] };
+    S.view.x += p.px - a.last.x; S.view.y += p.py - a.last.y;
+    a.last = { x: p.px, y: p.py };
+    requestRender(); syncZoomUI(); return;
+  }
+  if (a.type === "draw") {
+    if (!S.moved) return;
+    var pts = S.draw.pts, last = pts[pts.length - 1];
+    var mz = Math.max(0.8, 1.6 / S.view.z);
+    if (!last || Math.sqrt(dist2(last[0], last[1], p.wx, p.wy)) > mz) {
+      pts.push([p.wx, p.wy, e.pressure > 0 ? Math.min(1, e.pressure) : 0.5]);
+      requestRender();
+    }
+    return;
+  }
+  if (a.type === "erase") {
+    eraseAt(p.wx, p.wy);
+    return;
+  }
+  if (a.type === "marquee") {
+    S.sel.x2 = p.wx; S.sel.y2 = p.wy;
+    requestRender(); return;
+  }
+  if (a.type === "move") {
+    if (!S.moved && Math.sqrt(dxs * dxs + dys * dys) < 1) return;
+    a.mutated = true;
+    var dx = p.wx - S.downW[0], dy = p.wy - S.downW[1];
+    applySel(function (o) { moveItem(o, dx, dy); });
+    return;
+  }
+  if (a.type === "scale") {
+    if (!S.moved) return;
+    a.mutated = true;
+    var b = { x: 0, y: 0 }; /* 占位 */
+    var cx = a.cx, cy = a.cy;
+    var dx0 = S.downW[0] - cx, dy0 = S.downW[1] - cy;
+    var k;
+    if (a.dir === "e" || a.dir === "w") k = Math.abs(p.wx - cx) / Math.max(1e-3, Math.abs(dx0));
+    else if (a.dir === "n" || a.dir === "s") k = Math.abs(p.wy - cy) / Math.max(1e-3, Math.abs(dy0));
+    else k = Math.max(Math.abs(p.wx - cx) / Math.max(1e-3, Math.abs(dx0)), Math.abs(p.wy - cy) / Math.max(1e-3, Math.abs(dy0)));
+    k = clamp(k, 0.02, 60);
+    applySel(function (o) { scaleItem(o, cx, cy, k); });
+    return;
+  }
+  if (a.type === "rot") {
+    if (!S.moved) return;
+    a.mutated = true;
+    var ang = Math.atan2(p.wy - a.cy, p.wx - a.cx) - a.a0;
+    applySel(function (o) { rotateItem(o, a.cx, a.cy, ang); });
+  }
+}
+function toolUp(e) {
+  var a = S.act; if (!a) return;
+  var p = pointerPos(e);
+  if (a.type === "draw") {
+    var st = S.draw;
+    S.draw = null;
+    if (st && st.pts && st.pts.length) {
+      curItems().push(st);
+      a.mutated = true;
+      dirty(); requestRender(); syncPageUI();
+    }
+    if (!a.mutated) cancelHist();
+    return;
+  }
+  if (a.type === "erase") {
+    if (!a.mutated) cancelHist();
+    return;
+  }
+  if (a.type === "text") {
+    if (!S.moved) createTextAt(S.downW[0], S.downW[1]);
+    return;
+  }
+  if (a.type === "marquee") {
+    var x1 = Math.min(S.sel.x, S.sel.x2), y1 = Math.min(S.sel.y, S.sel.y2);
+    var x2 = Math.max(S.sel.x, S.sel.x2), y2 = Math.max(S.sel.y, S.sel.y2);
+    S.sel.mode = null;
+    if (x2 - x1 < 0.5 || y2 - y1 < 0.5) { S.sel.ids = []; requestRender(); return; }
+    var ids = [];
+    curItems().forEach(function (it) { if (insideMarquee(it, x1, y1, x2, y2)) ids.push(it.id); });
+    S.sel.ids = ids;
+    S.sel.mode = null;
+    syncSelBar(); requestRender(); return;
+  }
+  if (a.type === "move" || a.type === "scale" || a.type === "rot") {
+    S.sel.mode = null;
+    if (a.mutated) dirty();
+    else cancelHist();
+    syncSelBar();
+    return;
+  }
+}
+function cancelHist() {
+  if (S.hist.u.length > S.histMark) { S.hist.u.pop(); refreshUndoUI(); }
+}
+function histPush() {
+  if (!S.nb) return;
+  S.histMark = S.hist.u.length;
+  S.hist.u.push({ pi: S.pi, items: JSON.parse(JSON.stringify(curItems())) });
+  if (S.hist.u.length > 80) S.hist.u.shift();
+  S.hist.r.length = 0;
+  refreshUndoUI();
+}
+function dirty() {
+  if (S.nb) { S.nb.updatedAt = Date.now(); }
+  saveDB(); scheduleSave();
+}
+function scheduleSave() { clearTimeout(saveTimer); saveTimer = setTimeout(function () { saveDB(true); }, 500); }
+function undo() {
+  if (!S.nb || !S.hist.u.length) return;
+  var e = S.hist.u.pop();
+  goPage(e.pi, true);
+  S.hist.r.push({ pi: e.pi, items: JSON.parse(JSON.stringify(curItems())) });
+  curPage().items = e.items;
+  S.sel.ids = [];
+  refreshUndoUI(); syncPageUI(); syncSelBar(); requestRender(); dirty();
+}
+function redo() {
+  if (!S.nb || !S.hist.r.length) return;
+  var e = S.hist.r.pop();
+  goPage(e.pi, true);
+  S.hist.u.push({ pi: e.pi, items: JSON.parse(JSON.stringify(curItems())) });
+  curPage().items = e.items;
+  S.sel.ids = [];
+  refreshUndoUI(); syncPageUI(); syncSelBar(); requestRender(); dirty();
+}/* ---------- 橡皮擦（笔画切分） ---------- */
+function eraseAt(x, y) {
+  var page = curPage();
+  if (!page) return;
+  var r = (S.conf.eraser / 2 + 4) / S.view.z;
+  var out = [], changed = false;
+  page.items.forEach(function (it) {
+    var parts = eraseOnItem(it, x, y, r);
+    if (parts.length === 0) changed = true;
+    else if (parts.length === 1 && parts[0] === it) out.push(it);
+    else { changed = true; parts.forEach(function (p) { out.push(p); }); }
+  });
+  if (changed) {
+    page.items = out;
+    S.sel.ids = [];
+    syncSelBar();
+    if (S.act) S.act.mutated = true;
+    requestRender();
+  }
+}
+function eraseOnItem(it, x, y, r) {
+  if (it.t !== "s") {
+    var b = itemBounds(it); if (!b) return [it];
+    var pad = r + 6;
+    var hit = x >= b.x - pad && x <= b.x + b.w + pad && y >= b.y - pad && y <= b.y + b.h + pad;
+    return hit ? [] : [it];
+  }
+  if (it.kind === "shape") {
+    var tol = r + Math.max(6, 10 / S.view.z) + it.w / 2;
+    var sname = it.shape;
+    var a0 = it.pts[0], b0 = it.pts[it.pts.length - 1];
+    var hitS = false;
+    if (sname === "rect" || sname === "oval" || sname === "tri" || sname === "star") {
+      var ib = itemBounds(it);
+      hitS = x >= ib.x - tol && x <= ib.x + ib.w + tol && y >= ib.y - tol && y <= ib.y + ib.h + tol;
+    } else hitS = segDist(a0[0], a0[1], b0[0], b0[1], x, y) <= tol;
+    return hitS ? [] : [it];
+  }
+  var pts = it.pts, n = pts.length;
+  var rr = r + it.w / 2;
+  var hit = new Array(n);
+  for (var i = 0; i < n; i++) if (Math.sqrt(dist2(pts[i][0], pts[i][1], x, y)) <= rr) hit[i] = true;
+  for (var j = 1; j < n; j++) if (segDist(pts[j - 1][0], pts[j - 1][1], pts[j][0], pts[j][1], x, y) <= rr) { hit[j - 1] = true; hit[j] = true; }
+  var any = false; for (var k = 0; k < n; k++) if (hit[k]) { any = true; break; }
+  if (!any) return [it];
+  var parts = [], cur = [];
+  for (var m = 0; m < n; m++) {
+    if (!hit[m]) cur.push(pts[m]);
+    else if (cur.length) { parts.push(cur); cur = []; }
+  }
+  if (cur.length) parts.push(cur);
+  var res = [];
+  parts.forEach(function (seg) {
+    if (seg.length < 2) return;
+    var cp = seg.map(function (pt) { return pt.slice(); });
+    var st = { id: genId(), t: "s", kind: it.kind, w: it.w, color: it.color, op: it.op, pts: cp };
+    if (st.kind === "shape") { st.shape = it.shape; st.pts = [cp[0], cp[cp.length - 1]]; }
+    res.push(st);
+  });
+  return res;
+}
+/* ---------- 修正：选择/缩放/旋转 动作 ---------- */
+function beginActionFix(e, p) { beginAction(e, p); }
+function toolMoveFix(e, p, dxs, dys) { toolMove(e, p, dxs, dys); }
+function fixScaleAct(a, p, dir) {
+  a.dx0 = S.downW[0] - a.cx; a.dy0 = S.downW[1] - a.cy;
+  a.dir = dir;
+}
+/* FreeBoard 2.0 编辑与文本 */
+function refreshUndoUI() {
+  var u = $("btnUndo"), r = $("btnRedo");
+  if (u) u.classList.toggle("dis", !S.hist.u.length);
+  if (r) r.classList.toggle("dis", !S.hist.r.length);
+}
+function selItems() {
+  var items = curItems(), out = [];
+  items.forEach(function (it) { if (S.sel.ids.indexOf(it.id) >= 0) out.push(it); });
+  return out;
+}
+function selDelete() {
+  var n = S.sel.ids.length; if (!n) return;
+  histPush();
+  curPage().items = curItems().filter(function (it) { return S.sel.ids.indexOf(it.id) < 0; });
+  S.sel.ids = [];
+  syncSelBar(); requestRender(); dirty();
+}
+function selDuplicate(off) {
+  var items = selItems(); if (!items.length) return;
+  histPush();
+  var dx = off || 28, dy = off || 28, page = curPage();
+  var ids = [];
+  items.forEach(function (it) {
+    var cp = JSON.parse(JSON.stringify(it));
+    cp.id = genId();
+    if (cp.t === "s") cp.pts.forEach(function (pt) { pt[0] += dx; pt[1] += dy; });
+    else { cp.x += dx; cp.y += dy; }
+    page.items.push(cp); ids.push(cp.id);
+  });
+  S.sel.ids = ids;
+  syncSelBar(); requestRender(); dirty();
+}
+function selColor(c) {
+  var items = selItems(), changed = false;
+  items.forEach(function (it) {
+    if (it.t === "s" || it.t === "x") { it.color = c; changed = true; }
+  });
+  if (changed) { histPush(); requestRender(); dirty(); syncSelBar(); }
+}
+function selWidth(w) {
+  var items = selItems(), changed = false;
+  items.forEach(function (it) {
+    if (it.t === "s" && it.kind !== "shape") { it.w = Math.max(1, w); changed = true; }
+  });
+  if (changed) { histPush(); requestRender(); dirty(); }
+}
+function selOpacity(o) {
+  var items = selItems(), changed = false;
+  items.forEach(function (it) {
+    if (it.t === "s") { it.op = o; changed = true; }
+  });
+  if (changed) { histPush(); requestRender(); dirty(); }
+}
+function selOrder(front) {
+  var items = selItems(); if (!items.length) return;
+  histPush();
+  var page = curPage();
+  var ids = S.sel.ids.slice();
+  page.items = page.items.filter(function (it) { return ids.indexOf(it.id) < 0; });
+  var sel = items;
+  if (front) page.items = page.items.concat(sel);
+  else page.items = sel.concat(page.items);
+  requestRender(); dirty();
+}
+function selRotate90() {
+  var items = selItems(); if (!items.length) return;
+  histPush();
+  var b = selBoxWorld(); if (!b) return;
+  var cx = (b.x + b.x2) / 2, cy = (b.y + b.y2) / 2;
+  items.forEach(function (it) { rotateItem(it, cx, cy, Math.PI / 2); });
+  requestRender(); dirty();
+}
+function selectAllItems() {
+  if (!S.nb) return;
+  S.sel.ids = curItems().map(function (it) { return it.id; });
+  syncSelBar(); requestRender();
+}
+function clearSel() { S.sel.ids = []; syncSelBar(); requestRender(); }
+/* 内部剪贴板 */
+S.clip = null;
+function copySelToClip() {
+  var items = selItems(); if (!items.length) return;
+  S.clip = items.map(function (it) { return JSON.parse(JSON.stringify(it)); });
+  toast("已复制 " + items.length + " 个元素");
+}
+function cutSelToClip() { copySelToClip(); selDelete(); }
+function pasteClip() {
+  if (!S.clip || !S.clip.length) return;
+  histPush();
+  var dx = 32, dy = 32, page = curPage();
+  var ids = [];
+  S.clip.forEach(function (it) {
+    var cp = JSON.parse(JSON.stringify(it)); cp.id = genId();
+    if (cp.t === "s") cp.pts.forEach(function (pt) { pt[0] += dx; pt[1] += dy; });
+    else { cp.x += dx; cp.y += dy; }
+    page.items.push(cp); ids.push(cp.id);
+  });
+  S.sel.ids = ids;
+  syncSelBar(); requestRender(); dirty(); toast("已粘贴");
+}
+/* ---------- 键盘 ---------- */
+function onKeyDown(e) {
+  var tag = (e.target && e.target.tagName) || "";
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || (e.target && e.target.isContentEditable)) return;
+  if (S.typing) return;
+  if (!S.nb) return;
+  var mod = e.ctrlKey || e.metaKey;
+  if (e.key === "Escape") { clearSel(); return; }
+  if (mod && e.key.toLowerCase() === "z") { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+  if (mod && e.key.toLowerCase() === "y") { e.preventDefault(); redo(); return; }
+  if (mod && e.key.toLowerCase() === "a") { e.preventDefault(); selectAllItems(); return; }
+  if (mod && e.key.toLowerCase() === "c") { copySelToClip(); return; }
+  if (mod && e.key.toLowerCase() === "x") { cutSelToClip(); return; }
+  if (mod && e.key.toLowerCase() === "v") { pasteClip(); return; }
+  if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); selDelete(); return; }
+  var k = e.key.toLowerCase();
+  if (k === "v") setTool("select");
+  else if (k === "b") setTool("pen");
+  else if (k === "p") setTool("pencil");
+  else if (k === "m") setTool("hl");
+  else if (k === "e") setTool("eraser");
+  else if (k === "t") setTool("text");
+  else if (k === "h") setTool("hand");
+}
+/* ---------- 文本编辑 ---------- */
+var txtEdit = null;
+function textItemStyle() {
+  var t = S.conf.txt;
+  return { fs: t.fs, color: t.color, ff: t.ff, bold: t.bold, italic: t.italic, under: t.under, align: t.align };
+}
+function createTextAt(x, y) {
+  if (S.typing) return;
+  var t = S.conf.txt;
+  var it = { id: genId(), t: "x", x: x, y: y, w: 240, rot: 0, text: "", fs: t.fs, ff: t.ff, color: t.color, bold: t.bold, italic: t.italic, under: t.under, align: "left" };
+  S.txtNew = it;
+  beginTextEdit(it, null, null, true);
+}
+function beginTextEdit(it, cx, cy, isNew) {
+  if (S.typing) commitTextEdit(false);
+  S.typing = true;
+  txtEdit = { it: it, isNew: !!isNew, backup: isNew ? null : JSON.parse(JSON.stringify(it)) };
+  if (!isNew) histPush();
+  syncTextOverlay(it, cx, cy);
+  requestRender();
+}
+function syncTextOverlay(it, cx, cy) {
+  var ov = $("txtOver");
+  if (!ov) return;
+  ov.classList.remove("hide");
+  var wrap = $("cvWrap");
+  var wr = wrap.getBoundingClientRect();
+  var lx = sx(it.x), ly = sy(it.y);
+  var css = {
+    left: Math.round(lx) + "px",
+    top: Math.round(ly) + "px",
+    minWidth: Math.max(40, it.w * S.view.z) + "px",
+    font: fontStr(Math.max(10, it.fs * S.view.z), it.bold, it.italic, it.ff),
+    color: it.color,
+    textAlign: it.align
+  };
+  Object.keys(css).forEach(function (k) { ov.style[k] = css[k]; });
+  ov.textContent = it.text || "";
+  var bar = $("txtBar");
+  if (bar) {
+    bar.classList.remove("hide");
+    var by = ly - 52;
+    bar.style.left = clamp(lx, 0, Math.max(0, wr.width - 320)) + "px";
+    bar.style.top = Math.max(4, by) + "px";
+    syncTxtBarUI();
+  }
+  ov.focus && setTimeout(function () {
+    ov.focus();
+    var r = document.createRange(); r.selectNodeContents(ov); r.collapse(false);
+    var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+  }, 50);
+}
+function commitTextEdit(save) {
+  if (!txtEdit) return;
+  var ov = $("txtOver");
+  var text = ov ? ov.textContent.replace(/\u00a0/g, " ") : "";
+  var it = txtEdit.it;
+  if (save && it) {
+    if (txtEdit.isNew) {
+      var t = S.conf.txt;
+      it.text = text; it.fs = t.fs; it.ff = t.ff; it.color = t.color; it.bold = t.bold; it.italic = t.italic; it.under = t.under; it.align = t.align;
+      if (text.replace(/\s/g, "").length) {
+        it.w = textWidth(it);
+        histPush();
+        curItems().push(it);
+        S.sel.ids = [it.id];
+        dirty(); syncSelBar(); requestRender();
+      }
+    } else {
+      if (text.replace(/\s/g, "").length) {
+        it.text = text; it.w = textWidth(it);
+        dirty(); requestRender();
+      } else {
+        var arr = curItems();
+        for (var qi = 0; qi < arr.length; qi++) if (arr[qi].id === it.id) { arr.splice(qi, 1); break; }
+        S.sel.ids = [];
+        dirty(); requestRender(); syncSelBar();
+      }
+    }
+  } else if (txtEdit.backup && it) {
+    Object.keys(txtEdit.backup).forEach(function (k) { it[k] = txtEdit.backup[k]; });
+    if (!txtEdit.isNew) cancelHist();
+    requestRender();
+  }
+  S.typing = false; txtEdit = null;
+  var ov2 = $("txtOver");
+  if (ov2) { ov2.classList.add("hide"); ov2.textContent = ""; }
+  var bar = $("txtBar"); if (bar) bar.classList.add("hide");
+}
+function textWidth(it) {
+  var c = txtMeasureCtx();
+  c.font = fontStr(it.fs, it.bold, it.italic, it.ff);
+  var lines = String(it.text || "").split("\n");
+  var mw = 20;
+  lines.forEach(function (ln) { mw = Math.max(mw, c.measureText(ln).width + 8); });
+  return Math.max(24, Math.ceil(mw));
+}
+function textStyleFromUI(key, val) {
+  if (!txtEdit) return;
+  var it = txtEdit.it;
+  it[key] = val;
+  var ov = $("txtOver");
+  if (key === "fs" || key === "bold" || key === "italic" || key === "ff") {
+    ov.style.font = fontStr(Math.max(10, it.fs * S.view.z), it.bold, it.italic, it.ff);
+  }
+  if (key === "color") ov.style.color = val;
+  if (key === "align") ov.style.textAlign = val;
+  syncTxtBarUI();
+  if (key === "color") S.conf.txt.color = val;
+  else S.conf.txt[key] = val;
+  saveDB(true);
+  ov.focus();
+}
+function syncTxtBarUI() { }
+/* FreeBoard 2.0 导入导出 */
+var pdfjsReady = false;
+function injectPDFJS(cb) {
+  if (window.pdfjsLib && pdfjsReady) return cb(true);
+  if ($("pdfjsScript")) { var t0 = Date.now(); var chk = setInterval(function () { if (window.pdfjsLib) { clearInterval(chk); pdfjsReady = true; window.pdfjsLib.GlobalWorkerOptions.workerSrc = "lib/pdf.worker.min.js"; cb(true); } else if (Date.now() - t0 > 8000) { clearInterval(chk); cb(false); } }, 120); return; }
+  var s = document.createElement("script");
+  s.id = "pdfjsScript";
+  s.src = "lib/pdf.min.js";
+  s.onerror = function () { cb(false); };
+  s.onload = function () {
+    if (window.pdfjsLib) {
+      pdfjsReady = true;
+      try { window.pdfjsLib.GlobalWorkerOptions.workerSrc = "lib/pdf.worker.min.js"; } catch (e) {}
+      cb(true);
+    } else cb(false);
+  };
+  document.head.appendChild(s);
+}
+function importFiles(fileList) {
+  if (!S.nb) return;
+  var files = Array.prototype.slice.call(fileList || []);
+  if (!files.length) return;
+  var imgs = [], pdfs = [];
+  files.forEach(function (f) {
+    var nm = (f.name || "").toLowerCase();
+    if (f.type === "application/pdf" || nm.endsWith(".pdf")) pdfs.push(f);
+    else if (f.type.indexOf("image/") === 0 || /\.(png|jpe?g|webp|gif|bmp)$/.test(nm)) imgs.push(f);
+  });
+  var seq = 0;
+  function next() {
+    if (seq < imgs.length) { addImageFile(imgs[seq++]).then(next, next); }
+    else if (seq < imgs.length + pdfs.length) { importPDF(pdfs[seq++ - imgs.length]).then(next, next); }
+    else toast("导入完成");
+  }
+  next();
+}
+function downscaleImg(img, maxSide) {
+  var w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+  if (!w || !h) return null;
+  var k = 1;
+  if (Math.max(w, h) > maxSide) k = maxSide / Math.max(w, h);
+  var c = document.createElement("canvas");
+  c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k));
+  var ctx = c.getContext("2d");
+  ctx.drawImage(img, 0, 0, c.width, c.height);
+  return c.toDataURL("image/jpeg", 0.9);
+}
+function addImageFile(file) {
+  return new Promise(function (ok) {
+    var rd = new FileReader();
+    rd.onload = function () {
+      var im = new Image();
+      im.onload = function () {
+        var src = downscaleImg(im, 1800) || rd.result;
+        addImageItem(src, im.naturalWidth, im.naturalHeight);
+        ok();
+      };
+      im.onerror = function () { toast("图片读取失败"); ok(); };
+      im.src = rd.result;
+    };
+    rd.onerror = function () { toast("图片读取失败"); ok(); };
+    rd.readAsDataURL(file);
+  });
+}
+function addImageItem(src, iw, ih) {
+  if (!S.nb) return;
+  var r = cr();
+  var maxW = Math.max(160, r.width * 0.55);
+  var k = Math.min(1, maxW / Math.max(1, iw));
+  var w = Math.max(40, iw * k), h = Math.max(40, ih * k);
+  var cx = wx(r.width / 2), cy = wy(r.height / 2);
+  var it = { id: genId(), t: "i", x: cx - w / 2, y: cy - h / 2, w: w, h: h, rot: 0, src: src };
+  histPush();
+  curItems().push(it);
+  S.sel.ids = [it.id];
+  dirty(); syncSelBar(); requestRender();
+  setTool("select");
+}
+function importPDF(file) {
+  return new Promise(function (ok) {
+    injectPDFJS(function (ready) {
+      if (!ready) { toast("PDF 引擎未就绪（请使用完整版/网页版/App）"); ok(); return; }
+      var fr = new FileReader();
+      fr.onload = function () {
+        try {
+          var task = window.pdfjsLib.getDocument({ data: new Uint8Array(fr.result) });
+          task.promise.then(function (doc) {
+            var total = doc.numPages, idx = 0, nb = S.nb, cur = S.pi;
+            function step() {
+              if (idx >= total) {
+                doc.destroy && doc.destroy();
+                goPage(cur + 1, true);
+                syncPageUI(); requestRender(); saveDB(true);
+                toast("已导入 " + total + " 页 PDF");
+                ok(); return;
+              }
+              var pn = idx + 1;
+              doc.getPage(pn).then(function (page) {
+                var vp = page.getViewport({ scale: 1 });
+                var scale = Math.min(2, 2000 / Math.max(vp.width, 1));
+                var view = page.getViewport({ scale: scale });
+                var c = document.createElement("canvas");
+                c.width = Math.ceil(view.width); c.height = Math.ceil(view.height);
+                page.render({ canvasContext: c.getContext("2d"), viewport: view }).promise.then(function () {
+                  var src = c.toDataURL("image/jpeg", 0.86);
+                  var w = Math.min(1400, Math.max(300, vp.width * 1.4));
+                  var h = w * (view.height / view.width);
+                  var pageIt = mkPage();
+                  pageIt.items.push({ id: genId(), t: "i", x: 0, y: 0, w: w, h: h, rot: 0, src: src });
+                  nb.pages.splice(cur + pn, 0, pageIt);
+                  idx++; step();
+                }, function () { idx++; step(); });
+              }, function () { idx++; step(); });
+            }
+            step();
+          }, function () { toast("PDF 解析失败"); ok(); });
+        } catch (err) { toast("PDF 解析失败"); ok(); }
+      };
+      fr.onerror = function () { toast("PDF 读取失败"); ok(); };
+      fr.readAsArrayBuffer(file);
+    });
+  });
+}
+/* ---------- 渲染页面到画布（导出用） ---------- */
+function renderPageCanvas(nb, pi, opts) {
+  opts = opts || {};
+  var b = contentBounds(pi);
+  var pad = 40;
+  var cw = opts.w || 1200, ch = opts.h || 0;
+  var bw, bh;
+  if (!b) { bw = 900; bh = 640; }
+  else { bw = b.x2 - b.x; bh = b.y2 - b.y; }
+  var scale = Math.min(4, (cw - pad * 2) / Math.max(bw, 20));
+  if (!b) { cw = 900; ch = 640; } else { cw = Math.ceil((bw + pad * 2) * scale); ch = Math.ceil((bh + pad * 2) * scale); }
+  var c = document.createElement("canvas");
+  c.width = Math.min(4096, Math.max(64, cw)); c.height = Math.min(4096, Math.max(64, ch));
+  var ctx = c.getContext("2d");
+  var cfg = paperCfg(nb.paper);
+  ctx.fillStyle = cfg.color; ctx.fillRect(0, 0, c.width, c.height);
+  if (cfg.id === "dot" || cfg.id === "grid" || cfg.id === "line" || cfg.id === "staff") {
+    var ptile = paperTile(cfg);
+    var sx0 = 0, sy0 = 0;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, 0, c.width, c.height); ctx.clip();
+    var pat = ctx.createPattern(ptile.canvas, "repeat");
+    ctx.translate(-sx0, -sy0);
+    ctx.fillStyle = pat;
+    ctx.fillRect(0, 0, Math.ceil(c.width / ptile.w + 2) * ptile.w, Math.ceil(c.height / ptile.h + 2) * ptile.h);
+    ctx.restore();
+  }
+  if (b) {
+    ctx.save();
+    ctx.scale(scale, scale);
+    ctx.translate(-b.x + pad, -b.y + pad);
+    nb.pages[pi].items.forEach(function (it) {
+      if (it.t === "i") {
+        var im = imgEl(it.src);
+        if (im.complete && im.naturalWidth) { ctx.save(); ctx.translate(it.x + it.w / 2, it.y + it.h / 2); ctx.rotate(it.rot || 0); ctx.drawImage(im, -it.w / 2, -it.h / 2, it.w, it.h); ctx.restore(); }
+      } else paintItem(ctx, it);
+    });
+    ctx.restore();
+  }
+  return c;
+}
+function exportPagePNG() {
+  if (!S.nb) return;
+  var c = renderPageCanvas(S.nb, S.pi);
+  c.toBlob(function (blob) { if (blob) downloadFile(safeName(S.nb.name) + "-第" + (S.pi + 1) + "页.png", blob); }, "image/png");
+}
+function safeName(s) { return String(s || "白板").replace(/[\\/:*?"<>|]/g, "_").slice(0, 60); }/* ---------- 极简 PDF 生成器（JPEG 嵌入） ---------- */
+function b64bytes(durl) {
+  var i = durl.indexOf(",");
+  var bin = atob(durl.slice(i + 1));
+  var u = new Uint8Array(bin.length);
+  for (var k = 0; k < bin.length; k++) u[k] = bin.charCodeAt(k);
+  return u;
+}
+function exportBookPDF() {
+  if (!S.nb) return;
+  toast("正在导出 PDF…", 600);
+  setTimeout(function () {
+    try {
+      var pages = [];
+      for (var i = 0; i < S.nb.pages.length; i++) {
+        var c = renderPageCanvas(S.nb, i, { w: 1500 });
+        var jpg = c.toDataURL("image/jpeg", 0.84);
+        var pt = c.width / 96 * 72;
+        var ph = c.height / 96 * 72;
+        pages.push({ w: pt, h: ph, jpg: jpg });
+      }
+      var parts = [];
+      var head = "%PDF-1.4\n%\xe2\xe3\xcf\xd3\n";
+      parts.push(head);
+      var off = head.length, offs = [0];
+      var kids = [];
+      for (var k = 0; k < pages.length; k++) kids.push((3 + k * 3) + " 0 R");
+      function add(num, text) { offs[num] = off; var s = num + " 0 obj\n" + text + "\nendobj\n"; parts.push(s); off += s.length; }
+      add(1, "<< /Type /Catalog /Pages 2 0 R >>");
+      add(2, "<< /Type /Pages /Kids [" + kids.join(" ") + "] /Count " + pages.length + " >>");
+      var imgBytes = [];
+      for (var p = 0; p < pages.length; p++) {
+        var pg = pages[p];
+        var pageNum = 3 + p * 3, contNum = 4 + p * 3, imgNum = 5 + p * 3;
+        var cs = "q\n" + pg.w + " 0 0 " + pg.h + " 0 0 cm\n/Im0 Do\nQ\n";
+        add(pageNum, "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + pg.w + " " + pg.h + "] /Resources << /XObject << /Im0 " + imgNum + " 0 R >> >> /Contents " + contNum + " 0 R >>");
+        add(contNum, "<< /Length " + cs.length + " >>\nstream\n" + cs + "endstream");
+        var ib = b64bytes(pg.jpg);
+        imgBytes[p] = { num: imgNum, bytes: ib };
+        offs[imgNum] = off;
+        var sh = imgNum + " 0 obj\n<< /Type /XObject /Subtype /Image /Width " + pgW(pg) + " /Height " + Math.round(pgH(pg)) + " /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length " + ib.length + " >>\nstream\n";
+        parts.push(sh); off += sh.length;
+        parts.push(ib); off += ib.length;
+        var se = "\nendstream\nendobj\n"; parts.push(se); off += se.length;
+      }
+      var xrefPos = off;
+      var xref = "xref\n0 " + (pages.length * 3 + 3) + "\n0000000000 65535 f \n";
+      for (var m = 1; m <= pages.length * 3 + 2; m++) xref += ("0000000000" + (offs[m] || 0)).slice(-10) + " 00000 n \n";
+      var trailer = "trailer\n<< /Size " + (pages.length * 3 + 3) + " /Root 1 0 R >>\nstartxref\n" + xrefPos + "\n%%EOF";
+      parts.push(xref); parts.push(trailer);
+      downloadFile(safeName(S.nb.name) + ".pdf", new Blob(parts, { type: "application/pdf" }));
+      toast("PDF 已导出");
+    } catch (err) { toast("PDF 导出失败：" + err.message); }
+  }, 30);
+}
+function pgW(pg) { return Math.round((pg.w / 72 * 96) * 1); }
+function pgH(pg) { return Math.round((pg.h / 72 * 96) * 1); }
+/* ---------- 备份与恢复 ---------- */
+function backupAll() {
+  var data = { type: "freeboard-backup", v: 2, time: Date.now(), folders: DB.folders, settings: DB.settings, nbs: DB.nbs };
+  downloadFile("FreeBoard全量备份-" + new Date().toISOString().slice(0, 10) + ".json", new Blob([JSON.stringify(data)], { type: "application/json" }));
+  toast("备份文件已下载");
+}
+function backupNb(id) {
+  var nb = findNb(id); if (!nb) return;
+  var data = { type: "freeboard-nb", v: 2, time: Date.now(), nb: nb };
+  downloadFile(safeName(nb.name) + "-白板备份.json", new Blob([JSON.stringify(data)], { type: "application/json" }));
+  toast("白板备份已下载");
+}
+function restoreFile(file) {
+  var rd = new FileReader();
+  rd.onload = function () {
+    try {
+      var data = JSON.parse(rd.result);
+      if (data.type === "freeboard-backup" && data.nbs) {
+        confirmBox("恢复数据", "恢复将<b>合并</b>导入：同名白板会跳过，其余追加。是否继续？", function () {
+          data.nbs.forEach(function (nb) {
+            if (!findNb(nb.id)) { nb.id = genId(); nb.folder = ""; DB.nbs.push(nb); }
+          });
+          saveDB(true); renderHome(); toast("已恢复 " + data.nbs.length + " 个白板");
+        }, "恢复");
+      } else if (data.type === "freeboard-nb" && data.nb) {
+        var nb = JSON.parse(JSON.stringify(data.nb));
+        nb.id = genId(); nb.name = nb.name + "（恢复）"; nb.folder = "";
+        DB.nbs.push(nb); saveDB(true); renderHome(); toast("已导入白板《" + nb.name + "》");
+      } else toast("无法识别的备份文件");
+    } catch (e) { toast("备份文件解析失败"); }
+  };
+  rd.readAsText(file);
+}
+/* FreeBoard 2.0 页面管理 */
+function goPage(i, keepView) {
+  if (!S.nb) return;
+  if (S.typing) commitTextEdit(false);
+  S.pi = clamp(i, 0, S.nb.pages.length - 1);
+  S.nb.page = S.pi;
+  S.sel.ids = [];
+  if (!keepView) fitView();
+  syncPageUI(); syncSelBar(); refreshUndoUI(); requestRender();
+  if ($("btnPagePanel") && $("btnPagePanel").classList.contains("on")) updatePagePanel();
+}
+function addPage(at) {
+  if (!S.nb) return;
+  var idx = at == null ? S.pi + 1 : at;
+  S.nb.pages.splice(idx, 0, mkPage());
+  goPage(idx, true);
+  dirty(); syncPageUI();
+}
+function dupPage(idx) {
+  if (!S.nb) return;
+  var src = S.nb.pages[idx == null ? S.pi : idx];
+  var cp = JSON.parse(JSON.stringify(src));
+  cp.id = genId();
+  cp.items.forEach(function (it) { it.id = genId(); });
+  var i2 = idx == null ? S.pi + 1 : idx + 1;
+  S.nb.pages.splice(i2, 0, cp);
+  goPage(i2, true);
+  dirty(); syncPageUI();
+}
+function delPage(idx) {
+  if (!S.nb) return;
+  if (S.nb.pages.length <= 1) {
+    confirmBox("清空页面", "这是唯一一页，确定清空整页内容吗？", function () {
+      S.nb.pages[0].items = [];
+      S.sel.ids = [];
+      dirty(); syncPageUI(); requestRender();
+    }, "清空");
+    return;
+  }
+  var i = idx == null ? S.pi : idx;
+  confirmBox("删除页面", "确定删除第 " + (i + 1) + " 页吗？该页内容将一并删除。", function () {
+    S.nb.pages.splice(i, 1);
+    if (S.pi >= S.nb.pages.length) S.pi = S.nb.pages.length - 1;
+    goPage(S.pi, true);
+    dirty(); syncPageUI();
+  }, "删除");
+}
+function movePage(from, to) {
+  var pg = S.nb.pages.splice(from, 1)[0];
+  S.nb.pages.splice(to, 0, pg);
+  if (S.pi === from) S.pi = to;
+  else if (S.pi > from && S.pi < to) S.pi--;
+  dirty(); syncPageUI(); requestRender();
+}
+/* ---------- 缩略图 ---------- */
+function drawThumb(canvas, page, w, h, paperId) {
+  var c = canvas.getContext("2d");
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = w * dpr; canvas.height = h * dpr;
+  c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  var cfg = paperCfg(paperId || "plain");
+  c.fillStyle = cfg.color; c.fillRect(0, 0, w, h);
+  var b = null;
+  page.items.forEach(function (it) {
+    var ib = itemBounds(it); if (!ib) return;
+    if (!b) b = { x: ib.x, y: ib.y, x2: ib.x + ib.w, y2: ib.y + ib.h };
+    else { b.x = Math.min(b.x, ib.x); b.y = Math.min(b.y, ib.y); b.x2 = Math.max(b.x2, ib.x + ib.w); b.y2 = Math.max(b.y2, ib.y + ib.h); }
+  });
+  if (!b) {
+    c.fillStyle = "rgba(120,140,170,.14)";
+    c.font = "12px sans-serif"; c.textAlign = "center"; c.fillText("空白页", w / 2, h / 2 + 4);
+    return;
+  }
+  var pad = 10;
+  var z = Math.min((w - pad * 2) / (b.x2 - b.x), (h - pad * 2) / (b.y2 - b.y), 0.6);
+  c.save();
+  c.translate(pad + (w - pad * 2 - (b.x2 - b.x) * z) / 2 - b.x * z, pad + (h - pad * 2 - (b.y2 - b.y) * z) / 2 - b.y * z);
+  c.scale(z, z);
+  page.items.forEach(function (it) {
+    if (it.t === "i") {
+      var im = imgEl(it.src);
+      if (im.complete && im.naturalWidth) { try { c.drawImage(im, it.x, it.y, it.w, it.h); } catch (e) {} }
+    } else paintItem(c, it);
+  });
+  c.restore();
+}
+function refreshThumbs() {
+  if (!S.nb) return;
+  qsa(".pthumb").forEach(function (el) {
+    var idx = parseInt(el.getAttribute("data-i"), 10);
+    if (idx >= 0 && idx < S.nb.pages.length) {
+      drawThumb(el, S.nb.pages[idx], 120, 80, S.nb.paper);
+      el.classList.toggle("cur", idx === S.pi);
+      var nm = qs(".pthumb-name", el.parentNode); /* 由HTML结构决定 */
+    }
+  });
+}
+/* ---------- 底部页面条 ---------- */
+function syncPageUI() {
+  if (!S.nb) return;
+  var strip = $("pageStrip"); if (!strip) return;
+  var cur = S.pi;
+  var html = '<button class="strip-btn" data-go="prev" ' + (cur === 0 ? "disabled" : "") + ">" + ic("back") + "</button>";
+  html += '<div class="strip-thumbs" id="stripThumbs">';
+  var start = Math.max(0, cur - 3), end = Math.min(S.nb.pages.length - 1, start + 7);
+  start = Math.max(0, end - 7);
+  for (var i = start; i <= end; i++) {
+    html += '<button class="strip-pg' + (i === cur ? " cur" : "") + '" data-go="' + i + '" title="第 ' + (i + 1) + " 页\">" +
+      '<canvas class="pthumb" data-i="' + i + '" width="120" height="80"></canvas>' +
+      '<span>' + (i + 1) + "</span></button>";
+  }
+  html += "</div>";
+  html += '<button class="strip-btn" data-go="next" ' + (cur === S.nb.pages.length - 1 ? "disabled" : "") + ">" + ic("back") + "</button>";
+  html += '<button class="strip-btn add" id="btnStripAdd" title="新增页面">' + ic("plus") + "</button>";
+  strip.innerHTML = html;
+  qsa("[data-go]", strip).forEach(function (b) {
+    b.onclick = function () {
+      var g = b.getAttribute("data-go");
+      if (g === "prev") goPage(S.pi - 1);
+      else if (g === "next") goPage(S.pi + 1);
+      else goPage(parseInt(g, 10));
+    };
+  });
+  $("btnStripAdd").onclick = function () { addPage(); };
+  refreshThumbs();
+  var pg = $("pageInfo"); if (pg) pg.textContent = (cur + 1) + " / " + S.nb.pages.length;
+  var t = $("nbTitle"); if (t && document.activeElement !== t) t.value = S.nb.name;
+}
+/* ---------- 页面面板（弹出网格） ---------- */
+var pagePanelOpen = false;
+function togglePagePanel() {
+  var pp = $("pagePanel");
+  if (!pp) return;
+  pagePanelOpen = !pagePanelOpen;
+  pp.classList.toggle("open", pagePanelOpen);
+  var btn = $("btnPagePanel"); if (btn) btn.classList.toggle("on", pagePanelOpen);
+  if (pagePanelOpen) updatePagePanel();
+}
+function updatePagePanel() {
+  var body = qs(".pp-body", $("pagePanel"));
+  if (!body || !S.nb) return;
+  var html = "";
+  S.nb.pages.forEach(function (pg, i) {
+    html += '<div class="pp-card' + (i === S.pi ? " cur" : "") + '" data-i="' + i + '">' +
+      '<canvas class="pp-thumb" data-i="' + i + '" width="220" height="150"></canvas>' +
+      '<div class="pp-tools">' +
+      '<button data-op="dup" title="复制页面">' + ic("dup") + "</button>" +
+      '<button data-op="del" title="删除页面">' + ic("trash") + "</button>" +
+      '<button data-op="mvL" title="左移" ' + (i === 0 ? "disabled" : "") + ">" + ic("back") + "</button>" +
+      '<button data-op="mvR" title="右移" ' + (i === S.nb.pages.length - 1 ? "disabled" : "") + ">" + ic("redo") + "</button>" +
+      "</div><div class='pp-num'>" + (i + 1) + "</div></div>";
+  });
+  body.innerHTML = html;
+  qsa(".pp-card", body).forEach(function (card) {
+    var i = parseInt(card.getAttribute("data-i"), 10);
+    var cv = qs(".pp-thumb", card);
+    drawThumb(cv, S.nb.pages[i], 220, 150, S.nb.paper);
+    card.onclick = function (e) {
+      var op = e.target.closest("[data-op]");
+      if (op) {
+        e.stopPropagation();
+        var o = op.getAttribute("data-op");
+        if (o === "dup") dupPage(i);
+        else if (o === "del") delPage(i);
+        else if (o === "mvL") movePage(i, i - 1);
+        else if (o === "mvR") movePage(i, i + 1);
+        return;
+      }
+      goPage(i);
+    };
+  });
+}
+/* FreeBoard 2.0 首页与库管理 */
+var homeFilter = { q: "", folder: "", tag: "", sort: "recent" };
+function buildHome() {
+  var app = $("app");
+  app.innerHTML =
+    '<div id="scrHome" class="scr">' +
+    '<div class="home-hdr"><div class="brand"><span class="logo-mark">' + ic("pen") + "</span><div><h1>FreeBoard</h1><p>免费离线白板 · v" + VERSION + "</p></div></div>" +
+    '<div class="hdr-actions">' +
+    '<button class="iconbtn" id="btnSettings" title="设置">' + ic("settings") + "</button>" +
+    '<button class="btn primary" id="btnNewNb">' + ic("plus") + "<span>新建白板</span></button></div></div>" +
+    '<div class="home-tools"><div class="searchbox">' + ic("search") + '<input id="homeSearch" placeholder="搜索名称或标签"></div>' +
+    '<div class="home-filters" id="homeFilters"></div></div>' +
+    '<div id="nbGrid" class="nb-grid"></div>' +
+    '<div class="home-empty hide" id="homeEmpty"><div>' + ic("canvas") + "</div><p>还没有白板</p><button class='btn primary' onclick='window.FB&&FB.newNb()'>新建第一个白板</button></div>" +
+    "</div>";
+  $("btnNewNb").onclick = function () { newNbModal(); };
+  $("btnSettings").onclick = function () { settingsModal(); };
+  var si = $("homeSearch");
+  si.oninput = debounce(function () { homeFilter.q = si.value.trim().toLowerCase(); renderHome(); }, 200);
+  renderHome();
+}
+function renderHome() {
+  if ($("scrHome").classList.contains("hide")) return;
+  var folders = DB.folders || [];
+  var tags = {};
+  DB.nbs.forEach(function (nb) { (nb.tags || []).forEach(function (t) { tags[t] = 1; }); });
+  var fh = '<button class="chip' + (!homeFilter.folder ? " on" : "") + '" data-f="">全部</button>' +
+    '<button class="chip' + (homeFilter.folder === "_" ? " on" : "") + '" data-f="_">未分类</button>';
+  folders.forEach(function (f) { fh += '<button class="chip' + (homeFilter.folder === f.id ? " on" : "") + '" data-f="' + f.id + '">' + esc(f.name) + "</button>"; });
+  fh += '<button class="chip act" id="btnNewFolder">' + ic("folder") + " 新建文件夹</button>";
+  var th = "";
+  Object.keys(tags).forEach(function (t) {
+    th += '<button class="chip tag' + (homeFilter.tag === t ? " on" : "") + '" data-t="' + esc(t) + '">#' + esc(t) + "</button>";
+  });
+  fh += '<span class="fsort"><button class="chip' + (homeFilter.sort === "recent" ? " on" : "") + '" data-s="recent">最近</button>' +
+    '<button class="chip' + (homeFilter.sort === "name" ? " on" : "") + '" data-s="name">名称</button></span>';
+  var box = $("homeFilters");
+  box.innerHTML = fh + (th ? '<span class="fsep"></span>' + th : "");
+  qsa("[data-f]", box).forEach(function (b) { b.onclick = function () { homeFilter.folder = b.getAttribute("data-f"); renderHome(); }; });
+  qsa("[data-t]", box).forEach(function (b) { b.onclick = function () { homeFilter.tag = b.getAttribute("data-t"); renderHome(); }; });
+  qsa("[data-s]", box).forEach(function (b) { b.onclick = function () { homeFilter.sort = b.getAttribute("data-s"); renderHome(); }; });
+  $("btnNewFolder").onclick = function () { newFolderModal(); };
+  var list = DB.nbs.slice();
+  var q = homeFilter.q;
+  list = list.filter(function (nb) {
+    if (homeFilter.folder === "_" && nb.folder) return false;
+    if (homeFilter.folder && nb.folder !== homeFilter.folder) return false;
+    if (homeFilter.tag && (nb.tags || []).indexOf(homeFilter.tag) < 0) return false;
+    if (q && (nb.name.toLowerCase().indexOf(q) < 0) && !(nb.tags || []).join(",").toLowerCase().includes(q)) return false;
+    return true;
+  });
+  if (homeFilter.sort === "name") list.sort(function (a, b) { return a.name.localeCompare(b.name, "zh"); });
+  else list.sort(function (a, b) { return (b.openedAt || b.updatedAt || 0) - (a.openedAt || a.updatedAt || 0); });
+  var grid = $("nbGrid");
+  if (!list.length) { grid.innerHTML = ""; $("homeEmpty").classList.remove("hide"); return; }
+  $("homeEmpty").classList.add("hide");
+  var html = "";
+  list.forEach(function (nb) {
+    var folderName = "";
+    folders.forEach(function (f) { if (f.id === nb.folder) folderName = f.name; });
+    html += '<div class="nb-card" data-id="' + nb.id + '">' +
+      '<div class="nb-prev" style="background:' + nb.color + '22;border-color:' + nb.color + '55"><canvas data-id="' + nb.id + '" width="300" height="200"></canvas></div>' +
+      '<div class="nb-info"><div class="nb-name">' + esc(nb.name) + "</div>" +
+      '<div class="nb-meta">' + nb.pages.length + " 页 · " + fmtTime(nb.updatedAt || nb.createdAt) +
+      (folderName ? " · " + esc(folderName) : "") + "</div>" +
+      (nb.tags && nb.tags.length ? '<div class="nb-tags">' + nb.tags.map(function (t) { return "<span>#" + esc(t) + "</span>"; }).join("") + "</div>" : "") +
+      "</div>" +
+      '<button class="nb-menu" title="更多">' + ic("more") + "</button></div>";
+  });
+  grid.innerHTML = html;
+  qsa(".nb-card", grid).forEach(function (card) {
+    var id = card.getAttribute("data-id");
+    var nb = findNb(id);
+    if (nb) {
+      var cv = qs("canvas", card);
+      var prevPage = nb.pages[nb.page || 0] || nb.pages[0];
+      if (prevPage) drawThumb(cv, prevPage, 300, 200, nb.paper);
+      qs(".nb-info,.nb-prev", card).forEach(function (el) { el.onclick = function () { openNb(id); }; });
+      qs(".nb-menu", card).onclick = function (e) {
+        e.stopPropagation();
+        var r = card.getBoundingClientRect();
+        showMenu(Math.min(r.right - 170, window.innerWidth - 180), r.bottom + 6, nbMenuItems(id));
+      };
+    }
+  });
+}
+function nbMenuItems(id) {
+  return [
+    { t: "打开", f: function () { openNb(id); } },
+    { t: "重命名", f: function () { promptBox("重命名", findNb(id).name, function (v) { if (v) { findNb(id).name = v; saveDB(true); renderHome(); } }); } },
+    { t: "复制白板", f: function () { var nb = JSON.parse(JSON.stringify(findNb(id))); nb.id = genId(); nb.name += "（副本）"; nb.createdAt = Date.now(); nb.updatedAt = Date.now(); nb.pages.forEach(function (pg) { pg.id = genId(); pg.items.forEach(function (it) { it.id = genId(); }); }); DB.nbs.push(nb); saveDB(true); renderHome(); toast("已复制"); } },
+    { t: "移动文件夹", f: function () { moveNbModal(id); } },
+    { t: "编辑标签", f: function () { tagNbModal(id); } },
+    { t: "更换封面", f: function () { coverNbModal(id); } },
+    { t: "备份这本", f: function () { backupNb(id); } },
+    { t: "删除", danger: true, f: function () { confirmBox("删除白板", "删除《" + esc(findNb(id).name) + "》？所有页面与内容将无法找回。", function () { DB.nbs = DB.nbs.filter(function (x) { return x.id !== id; }); saveDB(true); renderHome(); }, "删除"); } }
+  ];
+}
+function newNbModal() {
+  var html = '<div class="form-row"><label>名称</label><input class="inp" id="nbName" placeholder="例如：数学笔记" value=""></div>' +
+    '<div class="form-row"><label>纸张模板</label><div class="paper-row" id="paperRow"></div></div>' +
+    '<div class="form-row"><label>封面颜色</label><div class="paper-row" id="colorRow"></div></div>';
+  var m = modal("新建白板", html, {
+    footer: '<button class="btn ghost" data-act="no">取消</button><button class="btn primary" data-act="ok">创建</button>',
+    onOpen: function (mm) {
+      var pr = $("paperRow");
+      var html2 = "";
+      PAPERS.forEach(function (p, i) {
+        html2 += '<button class="paper-cell' + (i === 0 ? " on" : "") + '" data-p="' + p.id + '" title="' + p.name + '">' +
+          '<span class="pp-icon" data-pp="' + p.id + '"></span><i>' + p.name + "</i></button>";
+      });
+      pr.innerHTML = html2;
+      qsa(".paper-cell", pr).forEach(function (b) {
+        b.onclick = function () { qsa(".paper-cell", pr).forEach(function (x) { x.classList.remove("on"); }); b.classList.add("on"); };
+      });
+      var cr = $("colorRow");
+      cr.innerHTML = NB_COLORS.map(function (c) {
+        return '<button class="color-cell" data-c="' + c + '" style="background:' + c + '"></button>';
+      }).join("");
+      qsa(".color-cell", cr).forEach(function (b, i) { b.onclick = function () { qsa(".color-cell", cr).forEach(function (x) { x.classList.remove("on"); }); b.classList.add("on"); }; });
+      qsa(".color-cell", cr)[0].classList.add("on");
+      $("nbName").focus();
+      qs('[data-act="ok"]', mm).onclick = function () {
+        var name = $("nbName").value.trim() || "未命名白板";
+        var paper = qs(".paper-cell.on", pr).getAttribute("data-p");
+        var color = qs(".color-cell.on", cr).getAttribute("data-c");
+        var nb = mkNb(name, paper);
+        nb.color = color;
+        DB.nbs.push(nb);
+        saveDB(true);
+        closeModal();
+        openNb(nb.id);
+      };
+      qs('[data-act="no"]', mm).onclick = closeModal;
+    }
+  });
+}
+function openNb(id) {
+  var nb = findNb(id); if (!nb) return;
+  commitTextEdit && commitTextEdit(false);
+  nb.openedAt = Date.now(); saveDB(true);
+  if (!S.nb) buildEditorShell();
+  S.nb = nb;
+  S.pi = clamp(nb.page || 0, 0, nb.pages.length - 1);
+  S.sel.ids = []; S.hist = { u: [], r: [] };
+  $("scrHome").classList.add("hide");
+  var ed = $("scrEdit"); ed.classList.remove("hide");
+  var t = $("nbTitle"); if (t) t.value = nb.name;
+  var badge = $("cvBadge"); if (badge) { badge.style.background = nb.color; }
+  refreshUndoUI();
+  fitView(); requestRender(); syncPageUI(); syncToolbar(); syncCtx(); syncSelBar(); updateCursor();
+  try { history.replaceState(null, "", "#b/" + nb.id); } catch (e) {}
+  resizeCanvas();
+  var panel = $("pagePanel"); if (panel) panel.classList.remove("open");
+  if ($("btnPagePanel")) $("btnPagePanel").classList.remove("on");
+}
+function closeToHome() {
+  if (S.typing) commitTextEdit(false);
+  S.nb = null;
+  S.sel.ids = [];
+  $("scrEdit").classList.add("hide");
+  $("scrHome").classList.remove("hide");
+  renderHome();
+  try { history.replaceState(null, "", location.pathname); } catch (e) {}
+  document.title = "FreeBoard 白板";
+}/* ---------- 上下文菜单 ---------- */
+function showMenu(x, y, items) {
+  var old = $("ctxMenu"); if (old) old.remove();
+  var m = document.createElement("div");
+  m.className = "ctxmenu"; m.id = "ctxMenu";
+  m.innerHTML = items.map(function (it) {
+    return '<button class="' + (it.danger ? "danger" : "") + '" data-i="' + esc(String(it.t)) + '">' + (it.icon ? it.icon : "") + esc(it.t) + "</button>";
+  }).join("");
+  document.body.appendChild(m);
+  var w = m.offsetWidth, h = m.offsetHeight;
+  m.style.left = clamp(x, 4, window.innerWidth - w - 8) + "px";
+  m.style.top = clamp(y, 4, window.innerHeight - h - 8) + "px";
+  qsa("button", m).forEach(function (b, i) { b.onclick = function (e) { e.stopPropagation(); m.remove(); items[i].f(); }; });
+  setTimeout(function () {
+    document.addEventListener("pointerdown", function h(e) {
+      if (!m.contains(e.target)) { m.remove(); document.removeEventListener("pointerdown", h); }
+    });
+  }, 10);
+}
+function newFolderModal() {
+  promptBox("新建文件夹", "", function (v) {
+    v = v.trim(); if (!v) return;
+    DB.folders.push({ id: genId(), name: v });
+    saveDB(true); renderHome();
+  }, "文件夹名称");
+}
+function moveNbModal(id) {
+  var opts = '<option value="">未分类</option>';
+  DB.folders.forEach(function (f) { opts += '<option value="' + f.id + '">' + esc(f.name) + "</option>"; });
+  var m = modal("移动到文件夹", '<select class="inp sel" id="folderSel">' + opts + "</select>", {
+    footer: '<button class="btn ghost" data-act="no">取消</button><button class="btn primary" data-act="ok">移动</button>'
+  });
+  qs('[data-act="ok"]', m).onclick = function () {
+    findNb(id).folder = $("folderSel").value; saveDB(true); closeModal(); renderHome();
+  };
+  qs('[data-act="no"]', m).onclick = closeModal;
+}
+function tagNbModal(id) {
+  var nb = findNb(id);
+  var m = modal("编辑标签", '<input class="inp" id="tagInp" placeholder="多个标签用逗号分隔" value="' + esc((nb.tags || []).join("，")) + '">' +
+    '<div class="form-tip">标签可帮助快速筛选，例如：工作、课堂、灵感</div>', {
+    footer: '<button class="btn ghost" data-act="no">取消</button><button class="btn primary" data-act="ok">保存</button>'
+  });
+  qs('[data-act="ok"]', m).onclick = function () {
+    var v = $("tagInp").value;
+    nb.tags = v.split(/[,，]/).map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 8);
+    saveDB(true); closeModal(); renderHome();
+  };
+  qs('[data-act="no"]', m).onclick = closeModal;
+}
+function coverNbModal(id) {
+  var m = modal("更换封面颜色", '<div class="paper-row" id="coverRow"></div>', {
+    footer: '<button class="btn ghost" data-act="no">取消</button><button class="btn primary" data-act="ok">确定</button>'
+  });
+  var cr = $("coverRow");
+  cr.innerHTML = NB_COLORS.map(function (c) {
+    return '<button class="color-cell big" data-c="' + c + '" style="background:' + c + '"></button>';
+  }).join("");
+  qsa(".color-cell", cr).forEach(function (b) { b.onclick = function () { qsa(".color-cell", cr).forEach(function (x) { x.classList.remove("on"); }); b.classList.add("on"); }; });
+  qs('[data-act="ok"]', m).onclick = function () {
+    var c = qs(".color-cell.on", cr); if (c) findNb(id).color = c.getAttribute("data-c");
+    saveDB(true); closeModal(); renderHome();
+  };
+  qs('[data-act="no"]', m).onclick = closeModal;
+}
+/* ---------- 设置 ---------- */
+function settingsModal() {
+  var st = DB.settings;
+  var theme = st.theme === "dark" ? "深色" : st.theme === "light" ? "浅色" : "跟随系统";
+  var html =
+    '<div class="set-row"><div><b>外观</b><p>界面主题（画布纸张另有模板）</p></div>' +
+    '<button class="chip on" id="btnTheme">' + theme + "</button></div>" +
+    '<div class="set-row"><div><b>手掌防误触</b><p>手掌碰到屏幕不会画线（触屏设备）</p></div>' +
+    '<label class="switch"><input type="checkbox" id="optPalm" ' + (st.palm !== false ? "checked" : "") + "><i></i></label></div>" +
+    '<div class="set-row"><div><b>双指缩放平移</b><p>任意工具下双指捏合缩放画布</p></div>' +
+    '<label class="switch"><input type="checkbox" id="optPinch" ' + (st.pinch !== false ? "checked" : "") + "><i></i></label></div>" +
+    '<div class="form-row"><button class="btn ghost" id="btnDataInfo">查看数据说明</button></div>' +
+    '<div class="set-row"><div><b>关于</b><p>FreeBoard v' + VERSION + " · 完全免费 · 离线可用 · 无广告无账号</p></div>" +
+    '<button class="btn ghost" id="btnAbout">关于</button></div>';
+  var m = modal("设置", html, { footer: '<button class="btn primary" data-act="ok">完成</button>' });
+  qs('[data-act="ok"]', m).onclick = closeModal;
+  $("btnTheme").onclick = function () {
+    var cur = DB.settings.theme;
+    DB.settings.theme = cur === "dark" ? "light" : cur === "light" ? "auto" : "dark";
+    applyTheme(); saveDB(true); settingsModal();
+  };
+  $("optPalm").onchange = function () { DB.settings.palm = this.checked; saveDB(true); };
+  $("optPinch").onchange = function () { DB.settings.pinch = this.checked; saveDB(true); };
+  $("btnDataInfo").onclick = function () { closeModal(); helpModal("data"); };
+  $("btnAbout").onclick = function () { closeModal(); helpModal("about"); };
+}
+function applyTheme() {
+  var st = DB.settings || {};
+  var dark = st.theme === "dark" || (st.theme !== "light" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  S.darkChrome = dark;
+  document.documentElement.classList.toggle("dark", dark);
+  var mt = document.querySelector('meta[name="theme-color"]');
+  if (mt) mt.setAttribute("content", dark ? "#151a21" : "#f4f6fa");
+}
+function helpModal(which) {
+  var html;
+  if (which === "about") {
+    html = "<p><b>FreeBoard 2.0</b> — 一款原创免费离线白板应用。</p>" +
+      "<ul class='help-list'><li>所有数据仅保存在本机浏览器/应用内，不上传云端。</li>" +
+      "<li>本软件与任何商业白板应用无关联，不含广告、账号与付费功能。</li>" +
+      "<li>需要可安装的安卓 App 版请下载随包附带的 .apk 文件。</li></ul>";
+  } else if (which === "data") {
+    html = "<p>数据保存在本机（IndexedDB），卸载浏览器或清除数据会丢失笔记。</p>" +
+      "<p>建议定期使用「备份/恢复」：在首页白板卡片菜单或白板右上角菜单中，选择<b>全量备份</b>，将 JSON 文件保存到网盘/电脑。</p>" +
+      "<ul class='help-list'><li>单本备份：仅导出该白板</li><li>全量备份：所有文件夹与白板</li></ul>";
+  } else {
+    html = "<h4>工具栏</h4><ul class='help-list'>" +
+      "<li><b>选择</b>：点选元素；空白处拖框多选；拖动移动；边角手柄缩放；上方圆钮旋转</li>" +
+      "<li><b>钢笔/铅笔/荧光笔</b>：手写；支持手写笔压感</li>" +
+      "<li><b>橡皮</b>：擦除笔画局部或整张图片/文本框</li>" +
+      "<li><b>文本</b>：点一下画布输入文字，完成后点「✓」</li>" +
+      "<li><b>形状</b>：选择直线/箭头/矩形/椭圆/三角形/星形后拖拽</li>" +
+      "<li><b>图片</b>：相册多选、拍照或导入 PDF</li></ul>" +
+      "<h4>手势与快捷键</h4><ul class='help-list'>" +
+      "<li>双指捏合缩放 · 双指拖动平移（触屏）</li>" +
+      "<li>滚轮缩放（电脑 Ctrl+滚轮）/ 两指滚动平移（触控板）</li>" +
+      "<li>Ctrl+Z 撤销 · Ctrl+Shift+Z 重做 · Delete 删除选中</li>" +
+      "<li>快捷键：V选择 B钢笔 P铅笔 M荧光笔 E橡皮 T文本 H抓手</li>" +
+      "<li>双击文字可直接编辑</li></ul>" +
+      "<h4>页面</h4><ul class='help-list'><li>底部页面条新增/翻页；点「页面」按钮网格管理（复制/删除/排序）</li>" +
+      "<li>右上菜单：导出当前页 PNG、导出整本 PDF、备份、纸张模板</li></ul>" +
+      "<p><b>纸张模板</b>可在右上角菜单随时更换，整本统一生效。</p>";
+  }
+  modal(which === "about" ? "关于 FreeBoard" : which === "data" ? "数据与备份" : "帮助", html, { footer: '<button class="btn primary" data-act="ok">知道了</button>' });
+  qs('[data-act="ok"]', $("modalBox")).onclick = closeModal;
+}
+/* FreeBoard 2.0 编辑器界面 */
+var QUICK_COLORS = ["#1a1a1a", "#ffffff", "#ef4444", "#f97316", "#facc15", "#22c55e", "#06b6d4", "#3b82f6", "#6366f1", "#a855f7", "#ec4899", "#8b5e34", "#94a3b8"];
+function buildEditorShell() {
+  var ed = document.createElement("div");
+  ed.id = "scrEdit"; ed.className = "scr hide";
+  ed.innerHTML =
+    '<div class="ed-head">' +
+    '<button class="iconbtn" id="btnBack" title="返回">' + ic("back") + "</button>" +
+    '<span class="cvbadge" id="cvBadge"></span>' +
+    '<input class="title-inp" id="nbTitle" maxlength="40" spellcheck="false">' +
+    '<button class="iconbtn" id="btnUndo" title="撤销 Ctrl+Z">' + ic("undo") + "</button>" +
+    '<button class="iconbtn" id="btnRedo" title="重做 Ctrl+Shift+Z">' + ic("redo") + "</button>" +
+    '<span class="spacer"></span>' +
+    '<span class="pageinfo" id="pageInfo"></span>' +
+    '<button class="btn slim" id="btnPagePanel">' + ic("pages") + "<span>页面</span></button>" +
+    '<button class="iconbtn" id="btnMore" title="更多">' + ic("more") + "</button></div>" +
+    '<div class="cvarea" id="cvWrap">' +
+    '<canvas id="cv"></canvas>' +
+    '<div class="rail" id="tbTools"></div>' +
+    '<div class="ctxcard hide" id="tbCtx"></div>' +
+    '<div class="zoombox" id="zoomBox"></div>' +
+    '<div class="page-strip" id="pageStrip"></div>' +
+    '<div class="selbar hide" id="selBar"></div>' +
+    '<div class="txt-over hide" id="txtOver" contenteditable="true" spellcheck="false"></div>' +
+    '<div class="txtbar hide" id="txtBar"></div>' +
+    "</div>" +
+    '<div class="pp-mask hide" id="ppMask"></div>' +
+    '<div class="page-panel" id="pagePanel">' +
+    '<div class="pp-head"><b>页面管理</b><button class="btn primary slim" id="btnPPAdd">' + ic("plus") + " 新增页面</button>" +
+    '<button class="iconbtn" id="btnPPClose">' + ic("close") + "</button></div>" +
+    '<div class="pp-body"></div></div>' +
+    '<input type="file" id="fImg" accept="image/*" multiple class="hide">' +
+    '<input type="file" id="fCam" accept="image/*" capture="environment" class="hide">' +
+    '<input type="file" id="fPdf" accept="application/pdf,.pdf" class="hide">' +
+    '<input type="file" id="fRestore" accept=".json,application/json" class="hide">' +
+    '<input type="file" id="fAllRestore" accept=".json,application/json" class="hide">';
+  $("app").appendChild(ed);
+  buildToolRail();
+  setupEditorEvents();
+  setupCanvasEvents();
+  resizeCanvas();
+}
+var TOOLS = [
+  { id: "select", label: "选择", k: "V" },
+  { id: "pen", label: "钢笔", k: "B" },
+  { id: "pencil", label: "铅笔", k: "P" },
+  { id: "hl", label: "荧光笔", k: "M" },
+  { id: "eraser", label: "橡皮", k: "E" },
+  { id: "text", label: "文本", k: "T" },
+  { id: "shape", label: "形状", k: "S" },
+  { id: "img", label: "图片", k: "I" },
+  { id: "hand", label: "抓手", k: "H" }
+];
+function buildToolRail() {
+  var rail = $("tbTools");
+  rail.innerHTML = TOOLS.map(function (t) {
+    return '<button class="toolbtn" data-tool="' + t.id + '" title="' + t.label + " (" + t.k + ')">' + ic(t.id === "img" ? "img" : t.id === "select" ? "select" : t.id === "hand" ? "hand" : t.id === "text" ? "text" : t.id === "eraser" ? "eraser" : t.id === "hl" ? "hl" : t.id === "pencil" ? "pencil" : t.id === "shape" ? S.shape : "pen") +
+      '<i>' + t.label + "</i></button>";
+  }).join("");
+  qsa(".toolbtn", rail).forEach(function (b) {
+    b.onclick = function () {
+      var t = b.getAttribute("data-tool");
+      if (t === "shape") { openShapeMenu(b); return; }
+      setTool(t);
+    };
+  });
+}
+function openShapeMenu(anchor) {
+  var r = anchor.getBoundingClientRect();
+  var items = SHAPE_OPTS.map(function (s) {
+    return { icon: ic(s), t: shapeName(s), f: function () { S.shape = s; setTool("shape"); } };
+  });
+  showMenu(r.left, r.bottom + 6, items);
+}
+function setToolIcon(tool) {
+  var rail = $("tbTools"); if (!rail) return;
+  qsa(".toolbtn", rail).forEach(function (b) {
+    b.classList.toggle("on", b.getAttribute("data-tool") === tool);
+  });
+}
+function syncToolbar() { setToolIcon(S.tool); syncCtx(); updateCursor(); }
+/* ---------- 上下文面板 ---------- */
+function swatchesHTML(cur, name) {
+  var h = "";
+  QUICK_COLORS.forEach(function (c) {
+    h += '<button class="sw' + (c.toLowerCase() === String(cur || "").toLowerCase() ? " on" : "") + '" data-c="' + c + '" style="background:' + c + '"></button>';
+  });
+  h += '<label class="sw cust" title="自定义颜色" style="background:conic-gradient(#f43f5e,#f59e0b,#22c55e,#06b6d4,#6366f1,#a855f7,#f43f5e)"><input type="color" value="' + (cur && /^#[0-9a-fA-F]{6}$/.test(cur) ? cur : "#000000") + '"></label>';
+  return h;
+}
+function bindSwatches(container, onPick) {
+  qsa(".sw", container).forEach(function (b) {
+    b.onclick = function (e) {
+      e.stopPropagation();
+      var c = b.getAttribute("data-c");
+      if (c) onPick(c);
+    };
+  });
+  var ci = qs('.sw input[type="color"]', container);
+  if (ci) ci.oninput = function () { onPick(ci.value); };
+}
+function colorOf(tool) { return S.conf.color; }
+function syncCtx() {
+  var box = $("tbCtx"); if (!box) return;
+  var t = S.tool;
+  box.classList.remove("hide");
+  var html = "";
+  if (t === "pen" || t === "pencil" || t === "hl" || t === "shape") {
+    var cur = S.conf.color;
+    html = '<div class="ctx-sws" id="ctxSws">' + swatchesHTML(cur) + "</div>" +
+      '<label class="ctx-slider"><span>粗细</span><input type="range" id="ctxW" min="1" max="18" step="0.5" value="' + S.conf.width + '"><b id="ctxWV">' + S.conf.width + "</b></label>" +
+      '<label class="ctx-slider slim"><span>透明度</span><input type="range" id="ctxO" min="10" max="100" step="5" value="' + Math.round(S.conf.opacity * 100) + '"><b id="ctxOV">' + Math.round(S.conf.opacity * 100) + '%</b></label>';
+    if (t === "shape") {
+      html += '<div class="ctx-shapes">' + SHAPE_OPTS.map(function (s) {
+        return '<button class="shapebtn' + (s === S.shape ? " on" : "") + '" data-shape="' + s + '" title="' + shapeName(s) + '">' + ic(s) + "</button>";
+      }).join("") + "</div>";
+    }
+  } else if (t === "eraser") {
+    html = '<label class="ctx-slider wide"><span>橡皮大小</span><input type="range" id="ctxE" min="6" max="90" step="1" value="' + S.conf.eraser + '"><b id="ctxEV">' + S.conf.eraser + "</b></label>";
+  } else if (t === "text") {
+    var tc = S.conf.txt;
+    html = '<div class="ctx-sws" id="ctxSws">' + swatchesHTML(tc.color) + "</div>" +
+      '<select class="ctx-sel" id="ctxFont">' + FONT_LIST.map(function (f, i) { return '<option value="' + i + '"' + (i === tc.ff ? " selected" : "") + ">" + f[1] + "</option>"; }).join("") + "</select>" +
+      '<label class="ctx-slider slim"><span>字号</span><input type="range" id="ctxFs" min="10" max="80" step="1" value="' + tc.fs + '"><b id="ctxFsV">' + tc.fs + "</b></label>" +
+      '<div class="ctx-tbtns">' +
+      '<button class="tbtn' + (tc.bold ? " on" : "") + '" id="txB" title="粗体">' + ic("bold") + "</button>" +
+      '<button class="tbtn' + (tc.italic ? " on" : "") + '" id="txI" title="斜体">' + ic("italic") + "</button>" +
+      '<button class="tbtn' + (tc.under ? " on" : "") + '" id="txU" title="下划线">' + ic("under") + "</button>" +
+      '<button class="tbtn' + (tc.align === "left" ? " on" : "") + '" id="txAL" title="左对齐">' + ic("left") + "</button>" +
+      '<button class="tbtn' + (tc.align === "center" ? " on" : "") + '" id="txAC" title="居中">' + ic("center") + "</button>" +
+      '<button class="tbtn' + (tc.align === "right" ? " on" : "") + '" id="txAR" title="右对齐">' + ic("right") + "</button></div>";
+  } else if (t === "img") {
+    html = '<div class="ctx-imgbtns"><button class="btn slim" id="btnPickImg">' + ic("img") + " 相册导入</button>" +
+      '<button class="btn slim" id="btnPickCam">' + ic("camera") + " 拍照</button>" +
+      '<button class="btn slim" id="btnPickPdf">' + ic("pdf") + " 导入 PDF</button></div>" +
+      '<div class="form-tip">支持多选图片、拖拽/粘贴图片；PDF 将逐页插入为图片页，可在其上书写标注。</div>';
+  } else if (t === "select") {
+    html = '<div class="form-tip sel-tip">' + ic("select") + " 点选元素 · 空白处拖框多选 · 拖动移动 · 手柄缩放/旋转 · Shift 加选</div>";
+  } else if (t === "hand") {
+    html = '<div class="form-tip sel-tip">' + ic("hand") + " 拖动画布 · 双指捏合缩放（任何工具都支持）</div>";
+  } else html = "";
+  box.innerHTML = html;
+  box.classList.toggle("hide", !html);
+  bindCtx(box, t);
+}
+function bindCtx(box, t) {
+  if (t === "pen" || t === "pencil" || t === "hl" || t === "shape") {
+    bindSwatches($("ctxSws"), function (c) { S.conf.color = c; markSw($("ctxSws"), c); });
+    var w = $("ctxW"), wo = $("ctxWV");
+    w.oninput = function () { S.conf.width = parseFloat(w.value); wo.textContent = w.value; };
+    var o = $("ctxO"), oo = $("ctxOV");
+    o.oninput = function () { S.conf.opacity = parseInt(o.value, 10) / 100; oo.textContent = o.value + "%"; };
+    if (t === "shape") {
+      qsa(".shapebtn", box).forEach(function (b) {
+        b.onclick = function () {
+          S.shape = b.getAttribute("data-shape");
+          qsa(".shapebtn", box).forEach(function (x) { x.classList.remove("on"); });
+          b.classList.add("on");
+          var rail = $("tbTools");
+          qsa(".toolbtn", rail).forEach(function (x) { if (x.getAttribute("data-tool") === "shape") x.innerHTML = ic(S.shape) + "<i>形状</i>"; });
+        };
+      });
+    }
+  } else if (t === "eraser") {
+    var e = $("ctxE"), ev = $("ctxEV");
+    e.oninput = function () { S.conf.eraser = parseInt(e.value, 10); ev.textContent = e.value; };
+  } else if (t === "text") {
+    bindSwatches($("ctxSws"), function (c) { S.conf.txt.color = c; markSw($("ctxSws"), c); });
+    var fs = $("ctxFs"), fv = $("ctxFsV");
+    fs.oninput = function () { S.conf.txt.fs = parseInt(fs.value, 10); fv.textContent = fs.value; };
+    $("ctxFont").onchange = function () { S.conf.txt.ff = parseInt(this.value, 10); };
+    var toggles = [["txB", "bold"], ["txI", "italic"], ["txU", "under"]];
+    toggles.forEach(function (pair) {
+      var b = $(pair[0]);
+      b.onclick = function () {
+        S.conf.txt[pair[1]] = !S.conf.txt[pair[1]];
+        b.classList.toggle("on", S.conf.txt[pair[1]]);
+      };
+    });
+    var als = [["txAL", "left"], ["txAC", "center"], ["txAR", "right"]];
+    als.forEach(function (pair) {
+      var b = $(pair[0]);
+      b.onclick = function () {
+        S.conf.txt.align = pair[1];
+        qsa(".tbtn", box).forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+      };
+    });
+  } else if (t === "img") {
+    $("btnPickImg").onclick = function () { $("fImg").click(); };
+    $("btnPickCam").onclick = function () { $("fCam").click(); };
+    $("btnPickPdf").onclick = function () { $("fPdf").click(); };
+  }
+}
+function markSw(container, c) {
+  if (!container) return;
+  qsa(".sw", container).forEach(function (b) {
+    var v = b.getAttribute("data-c");
+    b.classList.toggle("on", !!v && v.toLowerCase() === String(c).toLowerCase());
+  });
+  var ci = qs('.sw input[type="color"]', container);
+  if (ci) ci.value = c;
+}/* ---------- 缩放控件 ---------- */
+function buildZoomBox() {
+  var z = $("zoomBox");
+  z.innerHTML = '<button id="zOut" title="缩小">' + ic("zoomOut") + "</button>" +
+    '<button class="zval" id="zVal" title="100%">100%</button>' +
+    '<button id="zIn" title="放大">' + ic("zoomIn") + "</button>" +
+    '<button id="zFit" title="适配内容">' + ic("fit") + "</button>";
+  $("zOut").onclick = function () { zoomStep(-1); };
+  $("zIn").onclick = function () { zoomStep(1); };
+  $("zFit").onclick = fitView;
+  $("zVal").onclick = setZoom100;
+}
+function syncZoomUI() {
+  var z = $("zVal"); if (z) z.textContent = Math.round(S.view.z * 100) + "%";
+}
+/* ---------- 页面面板/头部 ---------- */
+function setupEditorEvents() {
+  $("btnBack").onclick = function () { closeToHome(); };
+  $("btnUndo").onclick = undo;
+  $("btnRedo").onclick = redo;
+  $("btnPagePanel").onclick = togglePagePanel;
+  $("btnPPClose").onclick = togglePagePanel;
+  $("ppMask").onclick = togglePagePanel;
+  $("btnPPAdd").onclick = function () { addPage(); };
+  $("btnMore").onclick = function () {
+    var r = $("btnMore").getBoundingClientRect();
+    showMenu(r.left - 160, r.bottom + 6, edMoreItems());
+  };
+  var ti = $("nbTitle");
+  ti.addEventListener("change", function () {
+    var v = ti.value.trim();
+    if (v && S.nb) { S.nb.name = v.slice(0, 40); document.title = S.nb.name + " - FreeBoard"; dirty(); }
+    else ti.value = S.nb ? S.nb.name : "";
+  });
+  ti.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") ti.blur();
+  });
+  $("fImg").addEventListener("change", function () { importFiles(this.files); this.value = ""; });
+  $("fCam").addEventListener("change", function () { importFiles(this.files); this.value = ""; });
+  $("fPdf").addEventListener("change", function () { if (this.files.length) importPDF(this.files[0]); this.value = ""; });
+  $("fRestore").addEventListener("change", function () { if (this.files.length) restoreFile(this.files[0]); this.value = ""; });
+  $("fAllRestore").addEventListener("change", function () { if (this.files.length) restoreFile(this.files[0]); this.value = ""; });
+  buildZoomBox();
+  buildTxtBar();
+  buildSelBar();
+  /* 拖放导入 */
+  document.addEventListener("dragover", function (e) { if (S.nb) { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; } });
+  document.addEventListener("drop", function (e) {
+    if (!S.nb) return;
+    e.preventDefault();
+    var files = e.dataTransfer && e.dataTransfer.files;
+    if (files && files.length) importFiles(files);
+  });
+  /* 文本输入过程中点击其它区域→提交 */
+  document.addEventListener("pointerdown", function (e) {
+    if (!S.typing || !txtEdit) return;
+    if (e.target.closest && e.target.closest("#txtOver")) return;
+    if (e.target.closest && e.target.closest("#txtBar")) return;
+    commitTextEdit(true);
+  }, true);
+  window.addEventListener("hashchange", function () { onHash(); });
+}
+function edMoreItems() {
+  var items = [
+    { icon: ic("download"), t: "导出当前页 PNG", f: exportPagePNG },
+    { icon: ic("pdf"), t: "导出整本 PDF（含笔记）", f: exportBookPDF },
+    { icon: ic("share"), t: "分享当前页", f: sharePage },
+    { icon: ic("linePaper"), t: "纸张模板", f: paperModal },
+    { icon: ic("rename"), t: "重命名白板", f: function () { promptBox("重命名", S.nb.name, function (v) { if (v) { S.nb.name = v; var t = $("nbTitle"); t.value = v; dirty(); document.title = v + " - FreeBoard"; } }); } },
+    { icon: ic("folder"), t: "移动到文件夹", f: function () { moveNbModal(S.nb.id); } },
+    { icon: ic("upload"), t: "备份这本白板", f: function () { backupNb(S.nb.id); } },
+    { icon: ic("doc"), t: "全量备份 / 恢复", f: allBackupMenu }
+  ];
+  items.push({ icon: ic("help"), t: "帮助", f: function () { helpModal(); } });
+  items.push({ icon: ic("settings"), t: "设置", f: settingsModal });
+  items.push({ icon: ic("back"), t: "返回首页", f: closeToHome });
+  return items;
+}
+function allBackupMenu() {
+  var r = $("btnMore").getBoundingClientRect();
+  showMenu(r.left - 170, r.bottom + 6, [
+    { icon: ic("upload"), t: "全量备份（所有白板）", f: backupAll },
+    { icon: ic("download"), t: "恢复全量备份", f: function () { $("fAllRestore").click(); } },
+    { icon: ic("download"), t: "导入单个白板备份", f: function () { $("fRestore").click(); } }
+  ]);
+}
+function paperModal() {
+  var html = '<div class="form-tip">纸张模板整本生效，随时可更换。</div><div class="paper-grid" id="paperGrid"></div>';
+  var m = modal("纸张模板", html, { footer: '<button class="btn primary" data-act="ok">完成</button>' });
+  var g = $("paperGrid");
+  g.innerHTML = PAPERS.map(function (p) {
+    return '<button class="paper-big' + (S.nb.paper === p.id ? " on" : "") + '" data-p="' + p.id + '">' +
+      '<span class="mini-paper" data-p="' + p.id + '"></span><i>' + p.name + "</i></button>";
+  }).join("");
+  qsa(".paper-big", g).forEach(function (b) {
+    b.onclick = function () {
+      qsa(".paper-big", g).forEach(function (x) { x.classList.remove("on"); });
+      b.classList.add("on");
+      S.nb.paper = b.getAttribute("data-p");
+      clearPatternCache();
+      dirty(); requestRender();
+    };
+  });
+  qs('[data-act="ok"]', m).onclick = closeModal;
+}
+/* ---------- 分享 ---------- */
+function sharePage() {
+  var c = renderPageCanvas(S.nb, S.pi);
+  c.toBlob(function (blob) {
+    if (!blob) return toast("导出失败");
+    var name = safeName(S.nb.name) + "-第" + (S.pi + 1) + "页.png";
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], name, { type: "image/png" })] })) {
+      navigator.share({ files: [new File([blob], name, { type: "image/png" })], title: S.nb.name }).catch(function () {});
+    } else downloadFile(name, blob);
+  }, "image/png");
+}
+/* ---------- 选择栏 ---------- */
+function buildSelBar() {
+  var bar = $("selBar");
+  bar.innerHTML =
+    '<span class="sel-count" id="selCount"></span>' +
+    '<div class="sel-group" id="selColors">' + QUICK_COLORS.slice(0, 7).map(function (c) {
+      return '<button class="sw small" data-c="' + c + '" style="background:' + c + '"></button>';
+    }).join("") +
+    '<label class="sw small cust" title="自定义"><input type="color" value="#1a1a1a"></label></div>' +
+    '<div class="sel-group" id="selWGroup" title="调整粗细"><input type="range" id="selW" min="1" max="20" step="0.5"><b id="selWV"></b></div>' +
+    '<button class="iconbtn" id="selDup" title="复制(Ctrl+C/Ctrl+V)">' + ic("dup") + "</button>" +
+    '<button class="iconbtn" id="selDel" title="删除">' + ic("trash") + "</button>" +
+    '<button class="iconbtn" id="selFront" title="置于顶层">' + ic("front") + "</button>" +
+    '<button class="iconbtn" id="selBack" title="置于底层">' + ic("back2") + "</button>" +
+    '<button class="iconbtn" id="selRot" title="顺时针旋转90°">' + ic("rotate") + "</button>";
+  bar.querySelectorAll("#selColors .sw").forEach(function (b) {
+    b.onclick = function () { var c = b.getAttribute("data-c"); if (c) selColor(c); };
+  });
+  var ci = qs('#selColors input[type="color"]');
+  ci.oninput = function () { selColor(ci.value); };
+  var w = $("selW"), wv = $("selWV");
+  w.oninput = function () { selWidth(parseFloat(w.value)); wv.textContent = w.value; };
+  $("selDup").onclick = selDuplicate;
+  $("selDel").onclick = selDelete;
+  $("selFront").onclick = function () { selOrder(true); };
+  $("selBack").onclick = function () { selOrder(false); };
+  $("selRot").onclick = selRotate90;
+}
+function syncSelBar() {
+  var bar = $("selBar"); if (!bar) return;
+  var n = S.sel.ids.length;
+  bar.classList.toggle("hide", !n || !S.nb);
+  if (!n) return;
+  var items = selItems();
+  $("selCount").textContent = n + " 项";
+  var hasStroke = items.some(function (it) { return it.t === "s"; });
+  $("selWGroup").style.display = hasStroke ? "" : "none";
+  var hasColor = items.some(function (it) { return it.t === "s" || it.t === "x"; });
+  $("selColors").style.display = hasColor ? "" : "none";
+  if (hasStroke) {
+    var ws = items.filter(function (it) { return it.t === "s"; }).map(function (it) { return it.w; });
+    var avg = ws.reduce(function (a, b) { return a + b; }, 0) / ws.length;
+    $("selW").value = clamp(Math.round(avg * 2) / 2, 1, 20);
+    $("selWV").textContent = $("selW").value;
+  }
+}
+/* ---------- 文字编辑栏 ---------- */
+function buildTxtBar() {
+  var bar = $("txtBar");
+  bar.innerHTML =
+    '<button class="btn primary slim" id="txDone">' + ic("check") + " 完成</button>" +
+    '<select id="txFont" class="ctx-sel">' + FONT_LIST.map(function (f, i) { return '<option value="' + i + '">' + f[1] + "</option>"; }).join("") + "</select>" +
+    '<label class="mini-slider"><b id="txFsV">22</b><input type="range" id="txFs" min="10" max="80" step="1"><span>字号</span></label>' +
+    '<button class="iconbtn" id="txB" title="粗体">' + ic("bold") + "</button>" +
+    '<button class="iconbtn" id="txI" title="斜体">' + ic("italic") + "</button>" +
+    '<button class="iconbtn" id="txU" title="下划线">' + ic("under") + "</button>" +
+    '<button class="iconbtn" id="txAL" title="左对齐">' + ic("left") + "</button>" +
+    '<button class="iconbtn" id="txAC" title="居中">' + ic("center") + "</button>" +
+    '<button class="iconbtn" id="txAR" title="右对齐">' + ic("right") + "</button>" +
+    '<span class="txt-colors" id="txColors">' + QUICK_COLORS.slice(0, 8).map(function (c) { return '<button class="sw small" data-c="' + c + '" style="background:' + c + '"></button>'; }).join("") +
+    '<label class="sw small cust"><input type="color" value="#1a1a1a"></label></span>';
+  $("txDone").onclick = function () { commitTextEdit(true); };
+  qsa("#txtBar .sw", bar).forEach(function (b) {
+    b.onclick = function () {
+      var c = b.getAttribute("data-c");
+      if (c) { textStyleFromUI("color", c); markSw($("txColors"), c); }
+    };
+  });
+  var ci = qs('#txtBar input[type="color"]');
+  ci.oninput = function () { textStyleFromUI("color", ci.value); markSw($("txColors"), ci.value); };
+  $("txFont").onchange = function () { textStyleFromUI("ff", parseInt(this.value, 10)); };
+  $("txFs").oninput = function () { textStyleFromUI("fs", parseInt(this.value, 10)); $("txFsV").textContent = this.value; };
+  $("txB").onclick = function () { textStyleFromUI("bold", !txtEdit.it.bold); };
+  $("txI").onclick = function () { textStyleFromUI("italic", !txtEdit.it.italic); };
+  $("txU").onclick = function () { textStyleFromUI("under", !txtEdit.it.under); };
+  [["txAL", "left"], ["txAC", "center"], ["txAR", "right"]].forEach(function (p) {
+    $(p[0]).onclick = function () { textStyleFromUI("align", p[1]); };
+  });
+  var ov = $("txtOver");
+  ov.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") { e.preventDefault(); commitTextEdit(false); }
+    e.stopPropagation();
+  });
+  ov.addEventListener("keyup", function () { syncTextPos(); });
+}
+function syncTxtBarUI() {
+  if (!txtEdit) return;
+  var it = txtEdit.it;
+  $("txFont").value = it.ff || 0;
+  $("txFs").value = it.fs;
+  $("txFsV").textContent = it.fs;
+  var togs = [["txB", it.bold], ["txI", it.italic], ["txU", it.under]];
+  togs.forEach(function (p) { $(p[0]).classList.toggle("on", !!p[1]); });
+  var als = [["txAL", "left"], ["txAC", "center"], ["txAR", "right"]];
+  als.forEach(function (p) { $(p[0]).classList.toggle("on", (it.align || "left") === p[1]); });
+  markSw($("txColors"), it.color);
+}
+function syncTextPos() {
+  if (!txtEdit) return;
+  var ov = $("txtOver");
+  var bar = $("txtBar");
+  var wrap = $("cvWrap");
+  var wr = wrap.getBoundingClientRect();
+  var it = txtEdit.it;
+  var css = {
+    left: Math.round(sx(it.x)) + "px",
+    top: Math.round(sy(it.y)) + "px",
+    minWidth: Math.max(40, it.w * S.view.z) + "px",
+    font: fontStr(Math.max(10, it.fs * S.view.z), it.bold, it.italic, it.ff),
+    color: it.color,
+    textAlign: it.align
+  };
+  Object.keys(css).forEach(function (k) { ov.style[k] = css[k]; });
+  bar.style.left = clamp(Math.round(sx(it.x)), 0, Math.max(0, wr.width - 320)) + "px";
+  bar.style.top = Math.max(4, Math.round(sy(it.y)) - 54) + "px";
+}
+/* FreeBoard 2.0 启动 */
+function onHash() {
+  var m = location.hash.match(/^#\/?b\/([A-Za-z0-9]+)/);
+  if (m && findNb(m[1])) {
+    if (!$("scrEdit") || $("scrEdit").classList.contains("hide")) openNb(m[1]);
+    else if (S.nb && S.nb.id !== m[1]) openNb(m[1]);
+  } else if (m && !findNb(m[1])) {
+    closeToHome();
+  }
+}
+function boot() {
+  loadDB().then(function () {
+    applyTheme();
+    document.title = "FreeBoard 白板";
+    buildHome();
+    onHash();
+    if (("serviceWorker" in navigator) && /^https?:$/.test(location.protocol) && !location.hostname.startsWith("localhost")) {
+      navigator.serviceWorker.register("sw.js").catch(function () {});
+    }
+    if (window.matchMedia) {
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
+    }
+    document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") saveDB(true); });
+    setInterval(function () { if (S.nb) saveDB(true); }, 30000);
+  });
+}
+/* ---------- 收尾修正 ---------- */
+function wrapLines(text, ctx, fs, maxW) {
+  var out = [];
+  var paras = String(text || "").split("\n");
+  for (var i = 0; i < paras.length; i++) {
+    var para = paras[i];
+    if (para === "") { out.push(""); continue; }
+    var line = "";
+    for (var j = 0; j < para.length; j++) {
+      var ch = para[j];
+      var t = line + ch;
+      if (ctx.measureText(t).width > maxW && line) { out.push(line); line = ch; }
+      else line = t;
+    }
+    out.push(line);
+  }
+  return out;
+}
+function onPasteDoc(e) {
+  if (!S.nb) return;
+  var files = (e.clipboardData && e.clipboardData.files) || [];
+  if (files.length) { e.preventDefault(); importFiles(files); return; }
+  var txt = (e.clipboardData && e.clipboardData.getData("text")) || "";
+  if (txt && S.tool === "text" && !S.typing) {
+    e.preventDefault();
+    var r = cr();
+    var it = createTextItem(wx(r.width / 2), wy(r.height / 2));
+    it.text = txt;
+    it.w = textWidth(it);
+    histPush();
+    curItems().push(it);
+    S.sel.ids = [it.id];
+    dirty(); syncSelBar(); requestRender();
+  }
+}
+function createTextItem(x, y) {
+  var t = S.conf.txt;
+  return { id: genId(), t: "x", x: x, y: y, w: 240, rot: 0, text: "", fs: t.fs, ff: t.ff, color: t.color, bold: t.bold, italic: t.italic, under: t.under, align: t.align };
+}
+/* 暴露测试/接口钩子 */
+var FB = {
+  version: VERSION,
+  getState: function () { return S; },
+  getDB: function () { return DB; },
+  newNb: function () { newNbModal(); },
+  open: function (id) { openNb(id); },
+  home: closeToHome,
+  help: function () { helpModal(); }
+};
+window.FB = FB;
+boot();
+window.__FBTest = {
+  ready: function () { return !!$("cv"); },
+  state: function () { return S; },
+  db: function () { return DB; },
+  items: function () { return S.nb ? S.nb.pages[S.pi].items : []; },
+  pageCount: function () { return S.nb ? S.nb.pages.length : 0; },
+  openNb: openNb,
+  setTool: setTool,
+  zoom: function (z) { S.view.z = clamp(z, 0.08, 8); syncZoomUI(); requestRender(); },
+  undo: undo, redo: redo,
+  selDelete: selDelete,
+  commitText: function () { if (S.typing) commitTextEdit(true); },
+  draw: function () { return S.draw; }
+};
+})();
+
+</script>
+</body>
+</html>
