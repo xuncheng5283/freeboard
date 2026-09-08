@@ -1,14 +1,13 @@
-# FreeBoard Whiteboard v2.1.0
+# FreeBoard Whiteboard v2.2.0
 
 Free web whiteboard, Notein-like feature set (everything except AI).
 
-- Pens (pen/highlighter/laser), pressure width, colors, opacity, pen box
-- Eraser (pixel/stroke/object), undo/redo
+- Pens (pen/pencil/highlighter/laser), pressure width, colors, opacity
+- Eraser (stroke-level), undo/redo
 - Lasso select/move/copy/rotate/scale/delete, layers
-- Text, images (incl. photo paste), backgrounds (grid/lines/dots/white/black)
-- Pages: new/switch/thumbnails/copy/delete, page navigation
-- Infinite canvas: pinch zoom/pan, box-select, ruler, presentation mode
-- PDF/image import, PNG/PDF export, encrypted .fbd project save
+- Text, shapes, images, notebooks/folders/tags/search
+- Paper: blank/dots/grid/lines/cornell/staff, dark mode
+- PDF import/export, PNG export, encrypted .fbd save, JSON backup
 - Fullscreen, PWA offline, autosave local only
 
 Online: https://xuncheng5283.github.io/freeboard/
