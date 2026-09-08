@@ -1,21 +1,15 @@
-# FreeBoard 白板（免费网页版）
+# FreeBoard Whiteboard v2.1.0
 
-一款免费、离线可用的手写白板，支持平板与手机。**原创软件，与任何商业白板产品无关**，无广告、无账号、不上传任何数据。
+Free web whiteboard, Notein-like feature set (everything except AI).
 
-## 功能
-- 画笔 / 荧光笔 / 橡皮（按笔画擦除）
-- 套索选择：移动、缩放、旋转、复制、删除
-- 文本工具：双击修改、颜色字号调节
-- 图片插入、PDF 多页导入
-- 导出 PNG / PDF（矢量线条）、JSON 备份与恢复
-- 多页笔记：添加、复制、删除、排序、页面缩略图
-- 本地资料库：文件夹、标签、搜索、排序
-- 撤销 / 重做、深浅色界面、快捷键
-- PWA：可“添加到主屏幕”离线使用；另有单文件版
+- Pens (pen/highlighter/laser), pressure width, colors, opacity, pen box
+- Eraser (pixel/stroke/object), undo/redo
+- Lasso select/move/copy/rotate/scale/delete, layers
+- Text, images (incl. photo paste), backgrounds (grid/lines/dots/white/black)
+- Pages: new/switch/thumbnails/copy/delete, page navigation
+- Infinite canvas: pinch zoom/pan, box-select, ruler, presentation mode
+- PDF/image import, PNG/PDF export, encrypted .fbd project save
+- Fullscreen, PWA offline, autosave local only
 
-## 使用
-- 在线版：打开 index.html
-- 单文件版：FreeBoard-单文件版.html（可保存到本地双击使用）
-- 数据默认保存在浏览器本地，不会上传
-
-详见 使用说明.html
+Online: https://xuncheng5283.github.io/freeboard/
+Android APK: see Releases on this repo

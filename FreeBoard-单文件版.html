@@ -137,14 +137,14 @@ html.dark .nb-menu{background:rgba(30,38,52,.8)}
 .paper-big i{font-style:normal;font-size:12px}
 .mini-paper{width:100%;height:56px;border-radius:7px;position:relative}
 .mini-paper[data-p="plain"]{background:#fff;border:1px solid var(--line)}
-.mini-paper[data-p="dot"]{background:#fff radial-gradient(circle,#b9c6d6 1.4px,transparent 1.6px);background-size:14px 14px}
-.mini-paper[data-p="grid"]{background-image:linear-gradient(#d4dce6 1px,transparent 1px),linear-gradient(90deg,#d4dce6 1px,transparent 1px);background-size:22px 22px;background-color:#fff}
-.mini-paper[data-p="line"]{background:repeating-linear-gradient(#fff 0 12px,#d4dce6 12px 13.5px)}
+.mini-paper[data-p="dot"]{background:#fff radial-gradient(circle,var(--pc,#b9c6d6) 1.4px,transparent 1.6px);background-size:14px 14px}
+.mini-paper[data-p="grid"]{background-image:linear-gradient(var(--pc,#d4dce6) 1px,transparent 1px),linear-gradient(90deg,var(--pc,#d4dce6) 1px,transparent 1px);background-size:22px 22px;background-color:#fff}
+.mini-paper[data-p="line"]{background:repeating-linear-gradient(#fff 0 12px,var(--pc,#d4dce6) 12px 13.5px)}
 .mini-paper[data-p="cornell"]{background:repeating-linear-gradient(#fff 0 12px,#d4dce6 12px 13.5px),linear-gradient(90deg,transparent 0 26%,#ef6a6a 26% 27%,transparent 27%)}
-.mini-paper[data-p="staff"]{background:repeating-linear-gradient(#fff 0 4px,#c3d2e2 4px 5px,#fff 5px 8px);background-size:auto 14px}
-.mini-paper[data-p="dotD"]{background:#1b2431 radial-gradient(circle,#42536b 1.6px,transparent 1.8px);background-size:14px 14px}
-.mini-paper[data-p="gridD"]{background:#1b2431 linear-gradient(#33445c 1px,transparent 1px),linear-gradient(90deg,#33445c 1px,transparent 1px);background-size:22px 22px}
-.mini-paper[data-p="lineD"]{background:#1b2431 repeating-linear-gradient(transparent 0 12px,#3a4d68 12px 13.5px)}
+.mini-paper[data-p="staff"]{background:repeating-linear-gradient(#fff 0 4px,var(--pc,#c3d2e2) 4px 5px,#fff 5px 8px);background-size:auto 14px}
+.mini-paper[data-p="dotD"]{background:#1b2431 radial-gradient(circle,var(--pc,#42536b) 1.6px,transparent 1.8px);background-size:14px 14px}
+.mini-paper[data-p="gridD"]{background:#1b2431 linear-gradient(var(--pc,#33445c) 1px,transparent 1px),linear-gradient(90deg,var(--pc,#33445c) 1px,transparent 1px);background-size:22px 22px}
+.mini-paper[data-p="lineD"]{background:#1b2431 repeating-linear-gradient(transparent 0 12px,var(--pc,#3a4d68) 12px 13.5px)}
 .set-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
 .set-row:last-of-type{border-bottom:none}
 .set-row b{font-size:14.5px}
@@ -310,7 +310,7 @@ html,body{position:fixed;inset:0;width:100%}
 /* FreeBoard 2.0 基础模块 */
 (function () {
 "use strict";
-var VERSION = "2.0.0";
+var VERSION = "2.2.0";
 /* ---------- 工具函数 ---------- */
 function $(id) { return document.getElementById(id); }
 function qs(sel, root) { return (root || document).querySelector(sel); }
@@ -545,8 +545,9 @@ var PAPERS = [
   { id: "gridD", name: "深色方格", dark: true },
   { id: "lineD", name: "深色横线", dark: true }
 ];
-function paperCfg(id) {
+function paperCfg(id, colorOverride) {
   var d = { color: "#ffffff", line: "#c3d2e2", dot: "#b9c6d6", grid: "#d4dce6", dark: false, name: "空白" };
+  if (id === "plain" || id === "cornell") colorOverride = null;
   switch (id) {
     case "dot": case "grid": case "line": case "cornell": case "staff": break;
     case "dotD": d.dark = true; d.color = "#1b2431"; d.dot = "#42536b"; break;
@@ -554,6 +555,8 @@ function paperCfg(id) {
     case "lineD": d.dark = true; d.color = "#1b2431"; d.line = "#3a4d68"; break;
   }
   for (var i = 0; i < PAPERS.length; i++) if (PAPERS[i].id === id) d.name = PAPERS[i].name;
+  if (colorOverride) { d.line = colorOverride; d.dot = colorOverride; d.grid = colorOverride; }
+  d.id = id;
   return d;
 }
 var NB_COLORS = ["#4f7cff", "#16a34a", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#0ea5e9", "#475569"];
@@ -573,14 +576,22 @@ var S = {
 };
 function mkPage() { return { id: genId(), items: [] }; }
 function mkNb(name, paper) {
-  return { id: genId(), name: name || "未命名白板", color: NB_COLORS[Math.floor(Math.random() * NB_COLORS.length)], paper: paper || "plain", bgColor: "", tags: [], folder: "", createdAt: Date.now(), updatedAt: Date.now(), openedAt: Date.now(), page: 0, pages: [mkPage()] };
+  return { id: genId(), name: name || "未命名白板", color: NB_COLORS[Math.floor(Math.random() * NB_COLORS.length)], paper: paper || "plain", paperColor: "", bgColor: "", tags: [], folder: "", createdAt: Date.now(), updatedAt: Date.now(), openedAt: Date.now(), page: 0, pages: [mkPage()] };
 }
 function curPage() { return S.nb ? S.nb.pages[S.pi] : null; }
 function curItems() { var p = curPage(); return p ? p.items : null; }
 function itemsById(id) { var a = curItems(); for (var i = 0; i < a.length; i++) if (a[i].id === id) return a[i]; return null; }
 function pageCount() { return S.nb ? S.nb.pages.length : 0; }
+var TCONF = {
+  pen: { color: "#1a1a1a", width: 4.5, opacity: 1 },
+  pencil: { color: "#4a4a4a", width: 2.2, opacity: 0.8 },
+  hl: { color: "#facc15", width: 14, opacity: 0.5 }
+};
 function setTool(t, silent) {
+  var old = S.tool;
+  if (old !== t && TCONF[old]) TCONF[old] = { color: S.conf.color, width: S.conf.width, opacity: S.conf.opacity };
   S.tool = t; S.sel.ids = [];
+  if (TCONF[t]) { var tc = TCONF[t]; S.conf.color = tc.color; S.conf.width = tc.width; S.conf.opacity = tc.opacity; }
   if (!silent) { syncToolbar(); syncCtx(); updateCursor(); }
 }
 /* ---------- 视口与画布 ---------- */
@@ -647,56 +658,65 @@ function contentBounds(pi) {
   return b;
 }
 /* ---------- 渲染调度 ---------- */
-var renderQueued = false, patternCache = {};
+var renderQueued = false;
 function requestRender() {
   if (renderQueued || !S.nb) return;
   renderQueued = true;
   requestAnimationFrame(function () { renderQueued = false; if (S.nb && $("cv")) render(); });
 }
-function clearPatternCache() { patternCache = {}; }
-function paperTile(cfg) {
-  var key = cfg.id + cfg.color + "|" + (cfg.dot || "") + "|" + (cfg.grid || "") + "|" + (cfg.line || "");
-  if (patternCache[key]) return patternCache[key];
-  var size = cfg.id === "staff" ? 320 : (cfg.id === "dot" ? 64 : 128);
-  var t = document.createElement("canvas"); t.width = size; t.height = size;
-  var c = t.getContext("2d");
-  c.fillStyle = cfg.color; c.fillRect(0, 0, size, size);
-  c.strokeStyle = cfg.line; c.fillStyle = cfg.dot; c.strokeStyle = cfg.grid;
-  if (cfg.id === "dot" || cfg.id === "dotD") {
+function clearPatternCache() { /* 图案改为直接绘制，无需缓存 */ }
+/* 直接在指定世界/页面区域内绘制纸张图案，保证无缝全幅覆盖。
+   k: 步长倍率（缩略图等使用），lw: 线宽（世界单位/页面单位） */
+function drawPaperPattern(c, cfg, x0, y0, x1, y1, k, lw) {
+  k = k || 1; lw = lw || 1;
+  var id = cfg.id, i, v;
+  if (id === "dot" || id === "dotD") {
+    var gap = 24 * k, ph = 12 * k, r = 1.7 * k + 0.5;
     c.fillStyle = cfg.dot;
-    for (var i = 0; i < size; i += 24) for (var j = 0; j < size; j += 24) { c.beginPath(); c.arc(i + 12, j + 12, 1.6, 0, 6.2832); c.fill(); }
-  } else if (cfg.id === "grid" || cfg.id === "gridD") {
-    c.strokeStyle = cfg.grid; c.lineWidth = 1;
-    for (var gi = 0; gi <= size; gi += 48) { c.beginPath(); c.moveTo(gi + 0.5, 0); c.lineTo(gi + 0.5, size); c.stroke(); c.beginPath(); c.moveTo(0, gi + 0.5); c.lineTo(size, gi + 0.5); c.stroke(); }
-  } else if (cfg.id === "line" || cfg.id === "lineD") {
-    c.strokeStyle = cfg.line; c.lineWidth = 1;
-    for (var li = 24; li < size; li += 48) { c.beginPath(); c.moveTo(0, li + 0.5); c.lineTo(size, li + 0.5); c.stroke(); }
-  } else if (cfg.id === "staff") {
-    c.strokeStyle = cfg.line; c.lineWidth = 1.4;
-    for (var k = 0; k < 5; k++) { var y = 20 + k * 14; c.beginPath(); c.moveTo(0, y + 0.5); c.lineTo(size, y + 0.5); c.stroke(); }
-    for (var k2 = 0; k2 < size; k2 += 160) { var y2 = 20 + 5 * 14 + 26; c.beginPath(); c.moveTo(0, k2 + y2); c.lineTo(size, k2 + y2); c.stroke(); }
+    var sy = Math.floor((y0 - ph) / gap) * gap + ph;
+    for (var dy = sy; dy <= y1; dy += gap) {
+      c.beginPath();
+      var sxc = Math.floor((x0 - ph) / gap) * gap + ph;
+      for (var dx = sxc; dx <= x1; dx += gap) c.arc(dx, dy, r, 0, 6.2832);
+      c.fill();
+    }
+  } else if (id === "grid" || id === "gridD") {
+    var gs = 48 * k;
+    c.strokeStyle = cfg.grid; c.lineWidth = lw;
+    var gxv = Math.floor(x0 / gs) * gs;
+    c.beginPath();
+    for (v = gxv; v <= x1; v += gs) { c.moveTo(v, y0); c.lineTo(v, y1); }
+    var gyv = Math.floor(y0 / gs) * gs;
+    for (v = gyv; v <= y1; v += gs) { c.moveTo(x0, v); c.lineTo(x1, v); }
+    c.stroke();
+  } else if (id === "line" || id === "lineD") {
+    var ls = 48 * k, lph = 24 * k;
+    c.strokeStyle = cfg.line; c.lineWidth = lw;
+    c.beginPath();
+    var lyv = Math.floor((y0 - lph) / ls) * ls + lph;
+    for (v = lyv; v <= y1; v += ls) { c.moveTo(x0, v); c.lineTo(x1, v); }
+    c.stroke();
+  } else if (id === "staff") {
+    var gGap = 120 * k, gPh = 20 * k, gStep = 14 * k;
+    c.strokeStyle = cfg.line; c.lineWidth = lw;
+    var gy0 = Math.floor((y0 - gPh) / gGap) * gGap + gPh;
+    c.beginPath();
+    for (var gy = gy0; gy <= y1; gy += gGap) {
+      for (i = 0; i < 5; i++) { var yy = gy + i * gStep; c.moveTo(x0, yy); c.lineTo(x1, yy); }
+    }
+    c.stroke();
   }
-  var p = document.createElement("canvas"); p.width = t.width; p.height = t.height;
-  p.getContext("2d").drawImage(t, 0, 0);
-  patternCache[key] = { canvas: p, w: size, h: size };
-  return patternCache[key];
 }
 function renderPaper(c) {
-  var cfg = paperCfg(S.nb.paper);
+  var cfg = paperCfg(S.nb.paper, S.nb.paperColor);
   var x0 = wx(0), y0 = wy(0), x1 = wx(S.canvasW), y1 = wy(S.canvasH);
   var w = x1 - x0, h = y1 - y0;
   c.fillStyle = cfg.color;
   c.fillRect(x0, y0, w, h);
-  if (cfg.id === "cornell") { /* 康奈尔：通栏横线+左侧栏 */ }
   if (cfg.id !== "plain" && cfg.id !== "cornell") {
-    var tile = paperTile(cfg);
-    c.save(); c.beginPath(); c.rect(x0, y0, w, h); c.clip();
-    var pw = tile.w, ph = tile.h;
-    var px = Math.floor(x0 / pw) * pw, py = Math.floor(y0 / ph) * ph;
-    var pat = c.createPattern(tile.canvas, "repeat");
-    c.translate(-px, -py);
-    c.fillStyle = pat;
-    c.fillRect(px, py, Math.ceil(w / pw + 2) * pw, Math.ceil(h / ph + 2) * ph);
+    c.save();
+    c.beginPath(); c.rect(x0, y0, w, h); c.clip();
+    drawPaperPattern(c, cfg, x0, y0, x1, y1, 1, 1);
     c.restore();
   }
   if (cfg.id === "cornell") {
@@ -709,6 +729,7 @@ function renderPaper(c) {
     c.restore();
   }
 }
+
 /* FreeBoard 2.0 笔迹/元素绘制 */
 var imgCache = {};
 function imgEl(src) {
@@ -752,42 +773,94 @@ function wrapLines(text, ctx, fs, maxW) {
   }
   return out;
 }
+function grain01(i, x, y) { var n = Math.sin(i * 127.1 + x * 311.7 + y * 74.7) * 43758.5453; return n - Math.floor(n); }
 function paintStroke(c, st, active) {
   var pts = st.pts;
-  if (!pts || pts.length < 2) {
-    if (pts && pts.length === 1) {
-      c.beginPath(); c.arc(pts[0][0], pts[0][1], (st.w || 2) / 2, 0, 6.2832); c.fill();
+  if (!pts || pts.length === 0) return;
+  var op = st.op == null ? 1 : st.op;
+  if (pts.length < 2) {
+    c.save();
+    c.globalAlpha = op;
+    c.fillStyle = st.color;
+    if (st.kind === "hl") {
+      var hd = paperCfg(S.nb.paper, S.nb.paperColor).dark;
+      c.globalCompositeOperation = hd ? "screen" : "multiply";
+      c.globalAlpha = op * 0.5;
+      c.beginPath(); c.arc(pts[0][0], pts[0][1], Math.max(2, st.w * 0.95), 0, 6.2832); c.fill();
+      c.globalAlpha = op * 0.85;
+      c.beginPath(); c.arc(pts[0][0], pts[0][1], Math.max(1.2, st.w * 0.42), 0, 6.2832); c.fill();
+    } else if (st.kind === "pencil") {
+      c.beginPath(); c.arc(pts[0][0], pts[0][1], Math.max(1, st.w * 0.5), 0, 6.2832); c.fill();
+      c.globalAlpha = op * 0.5;
+      c.beginPath(); c.arc(pts[0][0], pts[0][1], Math.max(1.4, st.w * 0.85), 0, 6.2832); c.fill();
+    } else {
+      c.beginPath(); c.arc(pts[0][0], pts[0][1], Math.max(1, st.w / 2), 0, 6.2832); c.fill();
     }
+    c.restore();
     return;
   }
-  var hl = st.kind === "hl";
   c.save();
-  c.globalAlpha = st.op == null ? 1 : st.op;
-  if (hl) {
-    var paperDark = paperCfg(S.nb.paper).dark;
-    c.globalCompositeOperation = paperDark ? "screen" : "multiply";
-  }
   c.strokeStyle = st.color; c.fillStyle = st.color;
   c.lineCap = "round"; c.lineJoin = "round";
   if (st.kind === "shape") { paintShape(c, st); c.restore(); return; }
-  var pencil = st.kind === "pencil";
-  c.lineWidth = st.w;
-  for (var i = 1; i < pts.length; i++) {
-    var a = pts[i - 1], b = pts[i];
-    if (a[0] === b[0] && a[1] === b[1]) continue;
-    var p1 = a[2] == null ? 0.5 : a[2], p2 = b[2] == null ? 0.5 : b[2];
-    var w1 = st.w * (0.72 + 0.55 * p1), w2 = st.w * (0.72 + 0.55 * p2);
-    if (pencil) { w1 *= 0.82; w2 *= 0.82; }
-    c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]);
-    c.lineWidth = (w1 + w2) / 2;
+  if (st.kind === "pen") {
+    c.globalAlpha = op;
+    for (var i = 1; i < pts.length; i++) {
+      var a = pts[i - 1], b = pts[i];
+      if (a[0] === b[0] && a[1] === b[1]) continue;
+      var p1 = a[2] == null ? 0.5 : a[2], p2 = b[2] == null ? 0.5 : b[2];
+      var w1 = st.w * (0.72 + 0.55 * p1), w2 = st.w * (0.72 + 0.55 * p2);
+      c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]);
+      c.lineWidth = (w1 + w2) / 2;
+      c.stroke();
+    }
+  } else if (st.kind === "hl") {
+    var dark = paperCfg(S.nb.paper, S.nb.paperColor).dark;
+    c.globalCompositeOperation = dark ? "screen" : "multiply";
+    var passes = [[1.02, 0.3], [0.7, 0.44], [0.38, 0.62]];
+    for (var pi = 0; pi < passes.length; pi++) {
+      c.globalAlpha = op * passes[pi][1];
+      c.lineWidth = st.w * passes[pi][0];
+      c.beginPath();
+      c.moveTo(pts[0][0], pts[0][1]);
+      for (var j = 1; j < pts.length; j++) c.lineTo(pts[j][0], pts[j][1]);
+      c.stroke();
+    }
+  } else {
+    var w0 = Math.max(0.8, st.w * 0.92);
+    c.globalAlpha = op * 0.16;
+    c.lineWidth = w0 * 1.9;
+    c.beginPath(); c.moveTo(pts[0][0], pts[0][1]);
+    for (var k1 = 1; k1 < pts.length; k1++) c.lineTo(pts[k1][0], pts[k1][1]);
     c.stroke();
-    if (pencil) {
-      c.globalAlpha = (st.op == null ? 1 : st.op) * 0.5;
-      c.beginPath(); c.arc((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (w1 + w2) / 6, 0, 6.2832); c.fill();
-      c.globalAlpha = st.op == null ? 1 : st.op;
+    c.globalAlpha = op * 0.6;
+    c.lineWidth = w0;
+    c.beginPath(); c.moveTo(pts[0][0], pts[0][1]);
+    for (var k2 = 1; k2 < pts.length; k2++) c.lineTo(pts[k2][0], pts[k2][1]);
+    c.stroke();
+    c.globalAlpha = op * 0.34;
+    for (var s = 1; s < pts.length; s++) {
+      var p0 = pts[s - 1], p1b = pts[s];
+      var dxx = p1b[0] - p0[0], dyy = p1b[1] - p0[1];
+      var len = Math.sqrt(dxx * dxx + dyy * dyy);
+      if (len < 0.01) continue;
+      var nx = -dyy / len, ny = dxx / len;
+      var g = grain01(s, p0[0], p0[1]);
+      var off = (g * 2 - 1) * w0 * 0.8;
+      c.lineWidth = w0 * (0.35 + g * 0.4);
+      c.beginPath();
+      c.moveTo(p0[0] + nx * off, p0[1] + ny * off);
+      c.lineTo(p1b[0] + nx * off, p1b[1] + ny * off);
+      c.stroke();
+      if ((s & 3) === 0) {
+        c.globalAlpha = op * 0.4;
+        c.beginPath();
+        c.arc((p0[0] + p1b[0]) / 2 + nx * off * 1.5, (p0[1] + p1b[1]) / 2 + ny * off * 1.5, w0 * 0.3, 0, 6.2832);
+        c.fill();
+        c.globalAlpha = op * 0.34;
+      }
     }
   }
-  if (pts.length === 1) { c.beginPath(); c.arc(pts[0][0], pts[0][1], st.w / 2, 0, 6.2832); c.fill(); }
   c.restore();
 }
 function paintShape(c, st) {
@@ -1081,24 +1154,12 @@ function onPD(e) {
   if (e.button === 2) return;
   e.preventDefault();
   var p = pointerPos(e);
-  S.pointers[e.pointerId] = { x: p.px, y: p.py, started: e.pointerType !== "touch" };
+  S.pointers[e.pointerId] = { x: p.px, y: p.py, started: true };
   if (Object.keys(S.pointers).length >= 2) { startPinch(e); return; }
   S.moved = false; S.downAt = Date.now();
   S.downXY = [p.px, p.py]; S.downW = [p.wx, p.wy]; S.curPid = e.pointerId;
-  if (e.pointerType === "touch") {
-    clearTimeout(palmTimer);
-    var pid = e.pointerId, dx0 = p.px, dy0 = p.py;
-    palmTimer = setTimeout(function () {
-      var pt = S.pointers[pid];
-      if (!pt) return;
-      if (Date.now() - S.downAt >= 70 && Math.abs(pt.x - dx0) < 12 && Math.abs(pt.y - dy0) < 12) {
-        pt.started = true;
-        if (!S.act && !S.moved) beginAction(e, { px: pt.x, py: pt.y, wx: wx(pt.x), wy: wy(pt.y) });
-      }
-    }, 75);
-  } else {
-    beginAction(e, p);
-  }
+  clearTimeout(palmTimer);
+  beginAction(e, p);
 }
 function onPM(e) {
   if (!S.nb) return;
@@ -1350,6 +1411,13 @@ function histPush() {
   if (S.hist.u.length > 80) S.hist.u.shift();
   S.hist.r.length = 0;
   refreshUndoUI();
+}
+function clearPageContent() {
+  if (!S.nb || !curItems()) return;
+  histPush();
+  curPage().items = [];
+  S.sel.ids = [];
+  refreshUndoUI(); syncPageUI(); syncSelBar(); requestRender(); dirty();
 }
 function dirty() {
   if (S.nb) { S.nb.updatedAt = Date.now(); }
@@ -1817,17 +1885,34 @@ function renderPageCanvas(nb, pi, opts) {
   var c = document.createElement("canvas");
   c.width = Math.min(4096, Math.max(64, cw)); c.height = Math.min(4096, Math.max(64, ch));
   var ctx = c.getContext("2d");
-  var cfg = paperCfg(nb.paper);
+  var cfg = paperCfg(nb.paper, nb.paperColor);
   ctx.fillStyle = cfg.color; ctx.fillRect(0, 0, c.width, c.height);
-  if (cfg.id === "dot" || cfg.id === "grid" || cfg.id === "line" || cfg.id === "staff") {
-    var ptile = paperTile(cfg);
-    var sx0 = 0, sy0 = 0;
+  if (cfg.id !== "plain" && cfg.id !== "cornell") {
+    if (b) {
+      ctx.save();
+      ctx.scale(scale, scale);
+      ctx.translate(-b.x + pad, -b.y + pad);
+      ctx.beginPath();
+      ctx.rect(b.x - pad, b.y - pad, (b.x2 - b.x) + pad * 2, (b.y2 - b.y) + pad * 2);
+      ctx.clip();
+      drawPaperPattern(ctx, cfg, b.x - pad, b.y - pad, b.x2 + pad, b.y2 + pad, 1, Math.max(0.4, 1.2 / scale));
+      ctx.restore();
+    } else {
+      ctx.save();
+      ctx.beginPath(); ctx.rect(0, 0, c.width, c.height); ctx.clip();
+      drawPaperPattern(ctx, cfg, 0, 0, c.width, c.height, 1, 1);
+      ctx.restore();
+    }
+  }
+  if (cfg.id === "cornell") {
     ctx.save();
-    ctx.beginPath(); ctx.rect(0, 0, c.width, c.height); ctx.clip();
-    var pat = ctx.createPattern(ptile.canvas, "repeat");
-    ctx.translate(-sx0, -sy0);
-    ctx.fillStyle = pat;
-    ctx.fillRect(0, 0, Math.ceil(c.width / ptile.w + 2) * ptile.w, Math.ceil(c.height / ptile.h + 2) * ptile.h);
+    ctx.strokeStyle = cfg.line; ctx.lineWidth = 1;
+    var csy = 0;
+    if (b) { csy = Math.floor((-pad) / 52) * 52; }
+    for (var ly2 = csy; ly2 < c.height; ly2 += 52) { ctx.beginPath(); ctx.moveTo(0, ly2 + 0.5); ctx.lineTo(c.width, ly2 + 0.5); ctx.stroke(); }
+    var cdivX = c.width * 0.26;
+    ctx.strokeStyle = "#e0665c"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(cdivX, 0); ctx.lineTo(cdivX, c.height); ctx.stroke();
     ctx.restore();
   }
   if (b) {
@@ -1994,13 +2079,27 @@ function movePage(from, to) {
   dirty(); syncPageUI(); requestRender();
 }
 /* ---------- 缩略图 ---------- */
-function drawThumb(canvas, page, w, h, paperId) {
+function drawThumb(canvas, page, w, h, paperId, paperColor) {
   var c = canvas.getContext("2d");
   var dpr = Math.min(window.devicePixelRatio || 1, 2);
   canvas.width = w * dpr; canvas.height = h * dpr;
   c.setTransform(dpr, 0, 0, dpr, 0, 0);
-  var cfg = paperCfg(paperId || "plain");
+  var cfg = paperCfg(paperId || "plain", paperColor);
   c.fillStyle = cfg.color; c.fillRect(0, 0, w, h);
+  if (cfg.id === "cornell") {
+    c.save();
+    c.strokeStyle = cfg.line; c.lineWidth = 1;
+    for (var cy = 12; cy < h; cy += 12) { c.beginPath(); c.moveTo(0, cy + 0.5); c.lineTo(w, cy + 0.5); c.stroke(); }
+    c.strokeStyle = "#e0665c"; c.lineWidth = 1.4;
+    var cdiv = Math.round(w * 0.26) + 0.5;
+    c.beginPath(); c.moveTo(cdiv, 0); c.lineTo(cdiv, h); c.stroke();
+    c.restore();
+  } else if (cfg.id !== "plain") {
+    c.save();
+    c.beginPath(); c.rect(0, 0, w, h); c.clip();
+    drawPaperPattern(c, cfg, -100, -100, w + 100, h + 100, 0.42, 1);
+    c.restore();
+  }
   var b = null;
   page.items.forEach(function (it) {
     var ib = itemBounds(it); if (!ib) return;
@@ -2008,7 +2107,7 @@ function drawThumb(canvas, page, w, h, paperId) {
     else { b.x = Math.min(b.x, ib.x); b.y = Math.min(b.y, ib.y); b.x2 = Math.max(b.x2, ib.x + ib.w); b.y2 = Math.max(b.y2, ib.y + ib.h); }
   });
   if (!b) {
-    c.fillStyle = "rgba(120,140,170,.14)";
+    c.fillStyle = "rgba(120,140,170,.35)";
     c.font = "12px sans-serif"; c.textAlign = "center"; c.fillText("空白页", w / 2, h / 2 + 4);
     return;
   }
@@ -2030,7 +2129,7 @@ function refreshThumbs() {
   qsa(".pthumb").forEach(function (el) {
     var idx = parseInt(el.getAttribute("data-i"), 10);
     if (idx >= 0 && idx < S.nb.pages.length) {
-      drawThumb(el, S.nb.pages[idx], 120, 80, S.nb.paper);
+      drawThumb(el, S.nb.pages[idx], 120, 80, S.nb.paper, S.nb.paperColor);
       el.classList.toggle("cur", idx === S.pi);
       var nm = qs(".pthumb-name", el.parentNode); /* 由HTML结构决定 */
     }
@@ -2095,7 +2194,7 @@ function updatePagePanel() {
   qsa(".pp-card", body).forEach(function (card) {
     var i = parseInt(card.getAttribute("data-i"), 10);
     var cv = qs(".pp-thumb", card);
-    drawThumb(cv, S.nb.pages[i], 220, 150, S.nb.paper);
+    drawThumb(cv, S.nb.pages[i], 220, 150, S.nb.paper, S.nb.paperColor);
     card.onclick = function (e) {
       var op = e.target.closest("[data-op]");
       if (op) {
@@ -2187,8 +2286,8 @@ function renderHome() {
     if (nb) {
       var cv = qs("canvas", card);
       var prevPage = nb.pages[nb.page || 0] || nb.pages[0];
-      if (prevPage) drawThumb(cv, prevPage, 300, 200, nb.paper);
-      qs(".nb-info,.nb-prev", card).forEach(function (el) { el.onclick = function () { openNb(id); }; });
+      if (prevPage) drawThumb(cv, prevPage, 300, 200, nb.paper, nb.paperColor);
+      qsa(".nb-info,.nb-prev", card).forEach(function (el) { el.onclick = function () { openNb(id); }; });
       qs(".nb-menu", card).onclick = function (e) {
         e.stopPropagation();
         var r = card.getBoundingClientRect();
@@ -2252,7 +2351,7 @@ function openNb(id) {
   var nb = findNb(id); if (!nb) return;
   commitTextEdit && commitTextEdit(false);
   nb.openedAt = Date.now(); saveDB(true);
-  if (!S.nb) buildEditorShell();
+  if (!document.getElementById("scrEdit")) buildEditorShell();
   S.nb = nb;
   S.pi = clamp(nb.page || 0, 0, nb.pages.length - 1);
   S.sel.ids = []; S.hist = { u: [], r: [] };
@@ -2419,6 +2518,7 @@ function buildEditorShell() {
     '<input class="title-inp" id="nbTitle" maxlength="40" spellcheck="false">' +
     '<button class="iconbtn" id="btnUndo" title="撤销 Ctrl+Z">' + ic("undo") + "</button>" +
     '<button class="iconbtn" id="btnRedo" title="重做 Ctrl+Shift+Z">' + ic("redo") + "</button>" +
+    '<button class="iconbtn" id="btnClear" title="清空本页（一键清屏）">' + ic("trash") + "</button>" +
     '<span class="spacer"></span>' +
     '<span class="pageinfo" id="pageInfo"></span>' +
     '<button class="btn slim" id="btnPagePanel">' + ic("pages") + "<span>页面</span></button>" +
@@ -2629,6 +2729,11 @@ function setupEditorEvents() {
   $("btnBack").onclick = function () { closeToHome(); };
   $("btnUndo").onclick = undo;
   $("btnRedo").onclick = redo;
+  $("btnClear").onclick = function () {
+    if (!S.nb) return;
+    if (!curItems() || !curItems().length) { toast("本页已经是空的"); return; }
+    confirmBox("清空页面", "确定清空本页全部内容吗？此操作可撤销。", function () { clearPageContent(); }, "清空");
+  };
   $("btnPagePanel").onclick = togglePagePanel;
   $("btnPPClose").onclick = togglePagePanel;
   $("ppMask").onclick = togglePagePanel;
@@ -2695,14 +2800,42 @@ function allBackupMenu() {
     { icon: ic("download"), t: "导入单个白板备份", f: function () { $("fRestore").click(); } }
   ]);
 }
+function paperDefaultColorOf(id) {
+  var cfg = paperCfg(id, null);
+  return id === "dot" || id === "dotD" ? cfg.dot : id === "grid" || id === "gridD" ? cfg.grid : cfg.line;
+}
+function syncPaperColorUI(g, pcRow) {
+  var cur = S.nb.paper;
+  var isPattern = cur !== "plain" && cur !== "cornell";
+  pcRow.classList.toggle("hide", !isPattern);
+  if (!isPattern) return;
+  var pc = S.nb.paperColor || "";
+  qsa(".mini-paper", g).forEach(function (el) {
+    var pid = el.getAttribute("data-p");
+    if (pid !== "plain" && pid !== "cornell") el.style.setProperty("--pc", pc);
+  });
+  var box = $("pcSws");
+  markSw(box, pc || paperDefaultColorOf(cur));
+  $("pcReset").style.display = pc ? "" : "none";
+}
+function setPaperColorUI(v, g, pcRow) {
+  S.nb.paperColor = v || "";
+  clearPatternCache();
+  dirty(); requestRender();
+  syncPaperColorUI(g, pcRow);
+}
 function paperModal() {
-  var html = '<div class="form-tip">纸张模板整本生效，随时可更换。</div><div class="paper-grid" id="paperGrid"></div>';
+  var html = '<div class="form-tip">纸张模板整本生效，随时可更换。</div><div class="paper-grid" id="paperGrid"></div>' +
+    '<div class="form-row hide" id="paperColorRow"><label>图案颜色（横线 / 点 / 格子的颜色，可自由选择）</label>' +
+    '<div class="ctx-sws" id="pcSws">' + swatchesHTML(S.nb.paperColor || paperDefaultColorOf(S.nb.paper)) + '</div>' +
+    '<div style="margin-top:8px"><button class="btn ghost slim" id="pcReset">恢复默认颜色</button></div></div>';
   var m = modal("纸张模板", html, { footer: '<button class="btn primary" data-act="ok">完成</button>' });
   var g = $("paperGrid");
   g.innerHTML = PAPERS.map(function (p) {
     return '<button class="paper-big' + (S.nb.paper === p.id ? " on" : "") + '" data-p="' + p.id + '">' +
       '<span class="mini-paper" data-p="' + p.id + '"></span><i>' + p.name + "</i></button>";
   }).join("");
+  var pcRow = $("paperColorRow");
   qsa(".paper-big", g).forEach(function (b) {
     b.onclick = function () {
       qsa(".paper-big", g).forEach(function (x) { x.classList.remove("on"); });
@@ -2710,8 +2843,12 @@ function paperModal() {
       S.nb.paper = b.getAttribute("data-p");
       clearPatternCache();
       dirty(); requestRender();
+      syncPaperColorUI(g, pcRow);
     };
   });
+  bindSwatches($("pcSws"), function (v) { setPaperColorUI(v, g, pcRow); });
+  $("pcReset").onclick = function () { setPaperColorUI("", g, pcRow); };
+  syncPaperColorUI(g, pcRow);
   qs('[data-act="ok"]', m).onclick = closeModal;
 }
 /* ---------- 分享 ---------- */
