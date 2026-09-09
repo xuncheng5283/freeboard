@@ -301,6 +301,90 @@ html,body{position:fixed;inset:0;width:100%}
   html,body{position:static}
   #app{position:fixed;inset:0}
 }
+/* ===== v2.3 首页新布局：笔记/文件夹/回收站、排序、多选 ===== */
+.home-tabs{max-width:1180px;margin:2px auto 0;padding:0 22px;display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.htab{display:inline-flex;align-items:center;gap:7px;padding:12px 16px 13px;font-size:15px;font-weight:700;color:var(--mut);border-bottom:2.5px solid transparent;position:relative}
+.htab svg.ic{width:19px;height:19px}
+.htab.on{color:var(--accent);border-bottom-color:var(--accent)}
+.htab-cnt{font-style:normal;font-size:11px;background:var(--accent);color:#fff;border-radius:10px;min-width:18px;height:18px;line-height:18px;padding:0 5px;text-align:center}
+.htab-cnt:empty{display:none}
+.home-body{max-width:1180px;margin:0 auto}
+.tab-note{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 22px 2px;color:var(--mut);font-size:13px;flex-wrap:wrap}
+.tab-note p{flex:1;min-width:220px;line-height:1.6}
+.home-selbar{width:100%;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:rgba(59,130,246,.1);border:1px dashed rgba(59,130,246,.5);border-radius:12px;padding:8px 12px}
+.home-selbar #selCountTxt{font-weight:700;color:var(--accent2)}
+.nb-card.selmode .nb-menu{display:none}
+.nb-card.selmode{cursor:pointer}
+.nb-card.sel{border-color:var(--accent);box-shadow:0 0 0 2px rgba(59,130,246,.35)}
+.nb-check{position:absolute;left:10px;top:10px;z-index:5;width:27px;height:27px;border-radius:50%;background:rgba(255,255,255,.94);border:2px solid #9db1cc;display:none;align-items:center;justify-content:center;box-shadow:0 1px 5px rgba(0,0,0,.2)}
+.nb-card.selmode .nb-check{display:inline-flex}
+.nb-check svg.ic{width:15px;height:15px;color:#fff;display:none}
+.nb-check.on{background:var(--accent);border-color:var(--accent)}
+.nb-check.on svg.ic{display:block}
+.nb-kind{position:absolute;left:10px;bottom:8px;font-size:10.5px;font-weight:700;background:rgba(20,30,50,.62);color:#fff;padding:2px 8px;border-radius:9px;backdrop-filter:blur(2px);pointer-events:none}
+.sort-menu{display:flex;flex-direction:column;gap:7px;padding:2px 0}
+.sort-row{display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:11px 13px;border-radius:11px;border:1px solid var(--line);background:var(--panel2);font-size:14.5px;font-weight:600}
+.sort-row svg.ic{width:17px;height:17px;flex:none}
+.sort-row.on{color:#fff;background:var(--accent);border-color:var(--accent)}
+.sort-row .sort-dot{width:9px;height:9px;border-radius:50%;border:2px solid currentColor;opacity:.45;margin-left:4px;flex:none}
+.sort-row.on .sort-dot{display:none}
+.fld-grid{max-width:1180px;margin:10px auto 60px;padding:6px 22px;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.fcard{background:var(--panel);border-radius:16px;border:1px solid var(--line);overflow:hidden;position:relative;box-shadow:var(--shadow2);transition:.16s;cursor:pointer}
+.fcard:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.fcard-prev{height:120px;background:linear-gradient(135deg,rgba(59,130,246,.16),rgba(99,102,241,.09));display:flex;align-items:center;justify-content:center;position:relative}
+.fcard-prev canvas{position:absolute;inset:0;width:100%;height:100%}
+.fcard-ic svg.ic{width:44px;height:44px;color:var(--accent)}
+.fcard-info{padding:11px 13px 13px}
+.fcard-name{font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fcard-meta{font-size:12px;color:var(--mut);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fcard.act{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:180px;border-style:dashed;color:var(--accent);background:transparent;cursor:pointer}
+.fcard.act svg.ic{width:34px;height:34px}
+.fcard.act b{font-size:15px}
+.fcard.act i{font-style:normal;font-size:12px;color:var(--mut)}
+.fcard .nb-menu{top:auto;bottom:8px}
+.tr-list{max-width:1180px;margin:8px auto 80px;padding:6px 22px;display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px}
+.tr-card{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px;box-shadow:var(--shadow2);position:relative}
+.tr-card.sel{border-color:var(--accent);box-shadow:0 0 0 2px rgba(59,130,246,.3)}
+.tr-prev{width:96px;height:64px;border-radius:8px;overflow:hidden;flex:none;background:var(--panel2)}
+.tr-prev canvas{width:100%;height:100%}
+.tr-info{flex:1;min-width:0}
+.tr-acts{display:flex;flex-direction:column;gap:6px}
+.tr-acts .btn{white-space:nowrap}
+.danger-outline{color:var(--danger);border:1px solid rgba(229,72,77,.5);background:transparent}
+.btn.slim.danger-outline:hover{background:rgba(229,72,77,.12)}
+.tr-bulk-wrap{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;justify-content:center;padding:0 16px 16px;pointer-events:none}
+.tr-bulk{display:flex;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:10px 16px;pointer-events:auto;flex-wrap:wrap;justify-content:center}
+.tr-bulk span{font-weight:700;font-size:13.5px;margin-right:4px}
+.krow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kopt{display:flex;flex-direction:column;gap:5px;align-items:flex-start;text-align:left;border:1.5px solid var(--line);border-radius:13px;padding:12px 14px;background:var(--panel2)}
+.kopt.on{border-color:var(--accent);background:rgba(59,130,246,.08)}
+.kopt .k-ic{width:34px;height:34px;border-radius:10px;background:rgba(59,130,246,.14);color:var(--accent);display:flex;align-items:center;justify-content:center;margin-bottom:2px}
+.kopt svg.ic{width:19px;height:19px}
+.kopt b{font-size:14.5px}
+.kopt i{font-style:normal;font-size:12px;color:var(--mut);line-height:1.5}
+.new-imp{margin-top:16px;border-top:1px dashed var(--line);padding-top:12px}
+.new-imp-t{font-size:12.5px;color:var(--mut);font-weight:700;margin-bottom:10px;letter-spacing:.5px}
+.new-imp-btns{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:9px}
+.impbtn{display:flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line);border-radius:11px;background:var(--panel2);padding:11px 8px;font-size:13.5px;font-weight:600}
+.impbtn svg.ic{width:17px;height:17px;color:var(--accent)}
+.impbtn:hover{border-color:var(--accent);background:rgba(59,130,246,.06)}
+@media (max-width:640px){
+  .krow{grid-template-columns:1fr}
+  .tr-list{grid-template-columns:1fr}
+  .home-tabs{padding:0 12px}
+  .home-hdr{padding:14px 12px 8px}
+  .home-tools{padding:0 12px}
+  .home-filters{padding:0 12px 6px}
+  .nb-grid,.fld-grid{padding:6px 12px}
+  .tr-list{padding:6px 12px}
+  .tab-note{padding:10px 12px 2px}
+  .new-imp-btns{grid-template-columns:1fr 1fr}
+}
+
+.tr-card>.nb-check{left:auto;right:10px;top:10px;display:inline-flex}
+.tr-card.sel .nb-check{background:var(--accent);border-color:var(--accent)}
+.tr-card.sel .nb-check svg.ic{display:block}
+
 </style>
 </head>
 <body>
@@ -310,7 +394,7 @@ html,body{position:fixed;inset:0;width:100%}
 /* FreeBoard 2.0 基础模块 */
 (function () {
 "use strict";
-var VERSION = "2.2.0";
+var VERSION = "2.3.0";
 /* ---------- 工具函数 ---------- */
 function $(id) { return document.getElementById(id); }
 function qs(sel, root) { return (root || document).querySelector(sel); }
@@ -410,6 +494,7 @@ ICON.doc = path('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-
 ICON.info = path('<circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="8" r=".8" fill="currentColor" stroke="none"/>');
 ICON.print = path('<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>');
 ICON.warn = path('<path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><circle cx="12" cy="17" r=".8" fill="currentColor" stroke="none"/>');/* ---------- 轻提示 ---------- */
+ICON.sort = path('<path d="M7 4v16"/><path d="M11 8L7 4 3 8"/><path d="M17 20V4"/><path d="M21 16l-4 4-4-4"/>');
 var toastTimer = 0;
 function toast(msg, ms) {
   var t = $("toast"); if (!t) return;
@@ -521,8 +606,8 @@ function idbGet(k) {
 }
 function lsRead(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } }
 function lsWrite(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
-var DB = { v: 2, folders: [], nbs: [], settings: { theme: "auto", palm: true, pinch: true } };
-function loadDB() { return idbOpen().then(function (ok) { return ok ? idbGet("db") : Promise.resolve(null); }).then(function (d) { if (d && d.v === 2) DB = d; DB.folders = DB.folders || []; DB.nbs = DB.nbs || []; DB.settings = DB.settings || {}; }); }
+var DB = { v: 2, folders: [], nbs: [], trash: [], settings: { theme: "auto", palm: true, pinch: true } };
+function loadDB() { return idbOpen().then(function (ok) { return ok ? idbGet("db") : Promise.resolve(null); }).then(function (d) { if (d && d.v === 2) DB = d; DB.folders = DB.folders || []; DB.nbs = DB.nbs || []; DB.trash = DB.trash || []; DB.settings = DB.settings || {}; var now = Date.now(); DB.nbs.forEach(function (nb) { if (!nb.createdAt) nb.createdAt = nb.updatedAt || now; if (!nb.updatedAt) nb.updatedAt = nb.createdAt; if (!nb.openedAt) nb.openedAt = nb.updatedAt; if (!nb.pages || !nb.pages.length) nb.pages = [mkPage()]; if (!nb.kind) nb.kind = "board"; if (nb.kind === "note") { if (!nb.pw) nb.pw = STD_NB_W; if (!nb.ph) nb.ph = STD_NB_H; } }); }); }
 function saveDB(now) {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(function () {
@@ -531,6 +616,11 @@ function saveDB(now) {
   }, now ? 0 : 350);
 }
 function findNb(id) { for (var i = 0; i < DB.nbs.length; i++) if (DB.nbs[i].id === id) return DB.nbs[i]; return null; }
+function trashItem(id) { var t = DB.trash || []; for (var i = 0; i < t.length; i++) if (t[i].id === id) return t[i]; return null; }
+function trashNb(id) { var nb = findNb(id); if (!nb) return; var cp = JSON.parse(JSON.stringify(nb)); DB.trash.push({ id: genId(), nb: cp, deletedAt: Date.now() }); DB.nbs = DB.nbs.filter(function (x) { return x.id !== id; }); }
+function restoreNb(id) { var t = trashItem(id); if (!t) return; var f = t.nb.folder; var hasF = (DB.folders || []).some(function (x) { return x.id === f; }); if (f && !hasF) t.nb.folder = ""; DB.nbs.push(t.nb); DB.trash = DB.trash.filter(function (x) { return x.id !== id; }); }
+function purgeTrash(id) { DB.trash = DB.trash.filter(function (x) { return x.id !== id; }); }
+function folderNameOf(fid) { var fs2 = DB.folders || []; for (var i = 0; i < fs2.length; i++) if (fs2[i].id === fid) return fs2[i].name; return ""; }
 function pageOf(nb, pi) { return nb.pages[pi]; }
 function itemsOf(nb, pi) { var p = nb.pages[pi]; return p.items; }
 /* ---------- 纸张配置 ---------- */
@@ -567,31 +657,37 @@ function shapeName(s) { return { line: "直线", arrow: "箭头", rect: "矩形"
 /* FreeBoard 2.0 状态与渲染 */
 var S = {
   nb: null, pi: 0, tool: "pen", shape: "rect", typing: false, darkChrome: false,
-  conf: { color: "#1a1a1a", width: 4, opacity: 1, eraser: 22, txt: { fs: 22, color: "#1a1a1a", ff: 0, bold: false, italic: false, under: false, align: "left" } },
+  conf: { color: "#1a1a1a", width: 4.5, opacity: 1, eraser: 22, txt: { fs: 22, color: "#1a1a1a", ff: 0, bold: false, italic: false, under: false, align: "left" } },
   view: { z: 1, x: 0, y: 0 },
   draw: null, pointers: {}, pinch: null, moved: false,
   sel: { ids: [], x: 0, y: 0, x2: 0, y2: 0, mode: null, sx: 0, sy: 0, startIds: null, hand: -1, k: 1 },
   hist: { u: [], r: [] }, undoT: 0,
   lastAct: null, firstDownAt: 0, firstDownXY: null, canvasW: 0, canvasH: 0
 };
+/* 标准笔记 A4 纸页尺寸（世界单位/px） */
+var STD_NB_W = 1240, STD_NB_H = 1754;
 function mkPage() { return { id: genId(), items: [] }; }
-function mkNb(name, paper) {
-  return { id: genId(), name: name || "未命名白板", color: NB_COLORS[Math.floor(Math.random() * NB_COLORS.length)], paper: paper || "plain", paperColor: "", bgColor: "", tags: [], folder: "", createdAt: Date.now(), updatedAt: Date.now(), openedAt: Date.now(), page: 0, pages: [mkPage()] };
+function mkNb(name, paper, kind) {
+  var k = kind === "board" ? "board" : "note";
+  var nb = { id: genId(), name: name || "未命名笔记", color: NB_COLORS[Math.floor(Math.random() * NB_COLORS.length)], paper: paper || "plain", paperColor: "", bgColor: "", tags: [], folder: "", kind: k, createdAt: Date.now(), updatedAt: Date.now(), openedAt: Date.now(), page: 0, pages: [mkPage()] };
+  if (k === "note") { nb.pw = STD_NB_W; nb.ph = STD_NB_H; }
+  return nb;
 }
 function curPage() { return S.nb ? S.nb.pages[S.pi] : null; }
 function curItems() { var p = curPage(); return p ? p.items : null; }
 function itemsById(id) { var a = curItems(); for (var i = 0; i < a.length; i++) if (a[i].id === id) return a[i]; return null; }
 function pageCount() { return S.nb ? S.nb.pages.length : 0; }
 var TCONF = {
-  pen: { color: "#1a1a1a", width: 4.5, opacity: 1 },
-  pencil: { color: "#4a4a4a", width: 2.2, opacity: 0.8 },
-  hl: { color: "#facc15", width: 14, opacity: 0.5 }
+  pen: { width: 4.5, opacity: 1 },
+  pencil: { width: 2.2, opacity: 0.8 },
+  hl: { width: 14, opacity: 0.5 }
 };
+/* 切换笔类只切换粗细/透明度，颜色保持不变（钢笔/铅笔/荧光笔共用当前颜色） */
 function setTool(t, silent) {
   var old = S.tool;
-  if (old !== t && TCONF[old]) TCONF[old] = { color: S.conf.color, width: S.conf.width, opacity: S.conf.opacity };
+  if (old !== t && TCONF[old] && TCONF[t]) { TCONF[old].width = S.conf.width; TCONF[old].opacity = S.conf.opacity; }
   S.tool = t; S.sel.ids = [];
-  if (TCONF[t]) { var tc = TCONF[t]; S.conf.color = tc.color; S.conf.width = tc.width; S.conf.opacity = tc.opacity; }
+  if (TCONF[t]) { var tc = TCONF[t]; S.conf.width = tc.width; S.conf.opacity = tc.opacity; }
   if (!silent) { syncToolbar(); syncCtx(); updateCursor(); }
 }
 /* ---------- 视口与画布 ---------- */
@@ -645,11 +741,14 @@ function setZoom100() {
   syncZoomUI(); requestRender();
 }
 /* ---------- 内容边界 ---------- */
+function sheetArea() {
+  if (!S.nb || S.nb.kind !== "note") return null;
+  return { x: 0, y: 0, x2: S.nb.pw || STD_NB_W, y2: S.nb.ph || STD_NB_H };
+}
 function contentBounds(pi) {
   var items = pi == null ? curItems() : S.nb.pages[pi].items;
-  if (!items || !items.length) return null;
-  var b = null;
-  items.forEach(function (it) {
+  var b = sheetArea();
+  if (items) items.forEach(function (it) {
     var ib = itemBounds(it);
     if (!ib) return;
     if (!b) b = { x: ib.x, y: ib.y, x2: ib.x + ib.w, y2: ib.y + ib.h };
@@ -711,23 +810,54 @@ function renderPaper(c) {
   var cfg = paperCfg(S.nb.paper, S.nb.paperColor);
   var x0 = wx(0), y0 = wy(0), x1 = wx(S.canvasW), y1 = wy(S.canvasH);
   var w = x1 - x0, h = y1 - y0;
-  c.fillStyle = cfg.color;
-  c.fillRect(x0, y0, w, h);
-  if (cfg.id !== "plain" && cfg.id !== "cornell") {
-    c.save();
-    c.beginPath(); c.rect(x0, y0, w, h); c.clip();
-    drawPaperPattern(c, cfg, x0, y0, x1, y1, 1, 1);
-    c.restore();
+  if (S.nb.kind !== "note") {
+    c.fillStyle = cfg.color;
+    c.fillRect(x0, y0, w, h);
+    if (cfg.id !== "plain" && cfg.id !== "cornell") {
+      c.save();
+      c.beginPath(); c.rect(x0, y0, w, h); c.clip();
+      drawPaperPattern(c, cfg, x0, y0, x1, y1, 1, 1);
+      c.restore();
+    }
+    if (cfg.id === "cornell") {
+      c.save();
+      c.strokeStyle = cfg.line; c.lineWidth = 1;
+      var sy0 = Math.floor(y0 / 52) * 52;
+      for (var ly = sy0; ly < y1; ly += 52) { c.beginPath(); c.moveTo(x0, ly + 0.5); c.lineTo(x1, ly + 0.5); c.stroke(); }
+      var mx = x0 + w * 0.26;
+      c.beginPath(); c.moveTo(mx, y0); c.lineTo(mx, y1); c.stroke();
+      c.restore();
+    }
+    return;
   }
+  /* 标准笔记：纸页以原点为左上角，外面为工作台底色 */
+  var pw = S.nb.pw || STD_NB_W, ph = S.nb.ph || STD_NB_H;
+  c.fillStyle = S.darkChrome ? "#12161d" : "#d7dde6";
+  c.fillRect(x0, y0, w, h);
+  var bx0 = Math.max(x0, -50), by0 = Math.max(y0, -50);
+  var bx1 = Math.min(x1, pw + 50), by1 = Math.min(y1, ph + 50);
+  if (bx1 <= bx0 || by1 <= by0) return;
+  c.save();
+  c.shadowColor = "rgba(8,16,32,.5)"; c.shadowBlur = 30; c.shadowOffsetY = 8;
+  c.fillStyle = cfg.color;
+  roundRect(c, 0, 0, pw, ph, 8); c.fill();
+  c.shadowColor = "transparent"; c.shadowBlur = 0; c.shadowOffsetY = 0;
+  roundRect(c, 0, 0, pw, ph, 8); c.clip();
+  if (cfg.id !== "plain" && cfg.id !== "cornell") drawPaperPattern(c, cfg, 0, 0, pw, ph, 1, 1);
   if (cfg.id === "cornell") {
     c.save();
     c.strokeStyle = cfg.line; c.lineWidth = 1;
-    var sy0 = Math.floor(y0 / 52) * 52;
-    for (var ly = sy0; ly < y1; ly += 52) { c.beginPath(); c.moveTo(x0, ly + 0.5); c.lineTo(x1, ly + 0.5); c.stroke(); }
-    var mx = x0 + w * 0.26;
-    c.beginPath(); c.moveTo(mx, y0); c.lineTo(mx, y1); c.stroke();
+    for (var ly2 = 0; ly2 <= ph; ly2 += 52) { c.beginPath(); c.moveTo(0, ly2 + 0.5); c.lineTo(pw, ly2 + 0.5); c.stroke(); }
+    c.strokeStyle = "#e0665c"; c.lineWidth = 1.6;
+    var mx2 = Math.round(pw * 0.26);
+    c.beginPath(); c.moveTo(mx2 + 0.5, 0); c.lineTo(mx2 + 0.5, ph); c.stroke();
     c.restore();
   }
+  c.restore();
+  c.save();
+  c.strokeStyle = "rgba(90,110,140,.55)"; c.lineWidth = 1;
+  roundRect(c, 0.5, 0.5, pw - 1, ph - 1, 8); c.stroke();
+  c.restore();
 }
 
 /* FreeBoard 2.0 笔迹/元素绘制 */
@@ -1816,6 +1946,7 @@ function addImageItem(src, iw, ih) {
   if (!S.nb) return;
   var r = cr();
   var maxW = Math.max(160, r.width * 0.55);
+  if (S.nb.kind === "note") maxW = Math.min(maxW, (S.nb.pw || STD_NB_W) - 140);
   var k = Math.min(1, maxW / Math.max(1, iw));
   var w = Math.max(40, iw * k), h = Math.max(40, ih * k);
   var cx = wx(r.width / 2), cy = wy(r.height / 2);
@@ -1853,7 +1984,8 @@ function importPDF(file) {
                 c.width = Math.ceil(view.width); c.height = Math.ceil(view.height);
                 page.render({ canvasContext: c.getContext("2d"), viewport: view }).promise.then(function () {
                   var src = c.toDataURL("image/jpeg", 0.86);
-                  var w = Math.min(1400, Math.max(300, vp.width * 1.4));
+                  var availW = (nb.kind === "note" ? (nb.pw || STD_NB_W) - 120 : 1400);
+                  var w = Math.min(availW, Math.max(300, vp.width * 1.4));
                   var h = w * (view.height / view.width);
                   var pageIt = mkPage();
                   pageIt.items.push({ id: genId(), t: "i", x: 0, y: 0, w: w, h: h, rot: 0, src: src });
@@ -1871,6 +2003,310 @@ function importPDF(file) {
     });
   });
 }
+/* ---------- v2.3 新建导入（快速创建笔记并导入内容） ---------- */
+function fileBaseName(name) { return String(name || "").replace(/\.[^.]+$/, "").trim() || "导入笔记"; }
+function nbFromFile(name, kind) {
+  var nb = mkNb(name, "plain", kind || "note");
+  nb.color = NB_COLORS[2 % NB_COLORS.length];
+  DB.nbs.push(nb);
+  saveDB(true);
+  openNb(nb.id);
+  return nb;
+}
+function importPDFAsNew(file) {
+  var nb = nbFromFile(fileBaseName(file.name));
+  toast("正在导入 PDF…", 800);
+  importPDF(file).then(function () {
+    if (nb.pages.length > 1 && nb.pages[0].items.length === 0) {
+      nb.pages.splice(0, 1);
+      S.pi = Math.max(0, S.pi - 1);
+    }
+    S.pi = 0; S.nb.page = 0;
+    saveDB(true); syncPageUI();
+    goPage(0);
+  });
+}
+function importImagesAsNew(fileList) {
+  var files = Array.prototype.slice.call(fileList || []);
+  if (!files.length) return;
+  var nb = nbFromFile(fileBaseName(files[0].name));
+  var seq = 0;
+  function next() {
+    if (seq >= files.length) {
+      goPage(0); requestRender(); saveDB(true);
+      toast("已导入 " + files.length + " 张图片");
+      return;
+    }
+    if (seq > 0) addPage();
+    addImageFile(files[seq++]).then(next, next);
+  }
+  next();
+}
+var pakoReady = false;
+function injectPako(cb) {
+  if (window.pako) { pakoReady = true; cb(true); return; }
+  if ($("pakoScript")) {
+    var t0 = Date.now();
+    var chk = setInterval(function () {
+      if (window.pako) { clearInterval(chk); pakoReady = true; cb(true); }
+      else if (Date.now() - t0 > 8000) { clearInterval(chk); cb(false); }
+    }, 120);
+    return;
+  }
+  var s = document.createElement("script");
+  s.id = "pakoScript";
+  s.src = "lib/pako.min.js";
+  s.onerror = function () { cb(false); };
+  s.onload = function () { if (window.pako) { pakoReady = true; cb(true); } else cb(false); };
+  document.head.appendChild(s);
+}
+function zipEntries(buf) {
+  var u8 = new Uint8Array(buf), dv = new DataView(buf);
+  var eocd = -1;
+  var start = Math.max(0, u8.length - 22 - 65535);
+  for (var i = u8.length - 22; i >= start; i--) {
+    if (u8[i] === 0x50 && u8[i + 1] === 0x4b && u8[i + 2] === 0x05 && u8[i + 3] === 0x06) { eocd = i; break; }
+  }
+  if (eocd < 0) return null;
+  var count = dv.getUint16(eocd + 10, true);
+  var cdOff = dv.getUint32(eocd + 16, true);
+  var out = {};
+  var pos = cdOff;
+  for (var k = 0; k < count; k++) {
+    if (dv.getUint32(pos, true) !== 0x02014b50) return null;
+    var method = dv.getUint16(pos + 10, true);
+    var compSize = dv.getUint32(pos + 20, true);
+    var nameLen = dv.getUint16(pos + 28, true);
+    var extraLen = dv.getUint16(pos + 30, true);
+    var cmtLen = dv.getUint16(pos + 32, true);
+    var flags = dv.getUint16(pos + 8, true);
+    var localOff = dv.getUint32(pos + 42, true);
+    var rawName = new Uint8Array(u8.buffer, u8.byteOffset + pos + 46, nameLen);
+    var name = "";
+    if (flags & 0x800) name = new TextDecoder("utf-8").decode(rawName);
+    else { for (var b = 0; b < rawName.length; b++) name += String.fromCharCode(rawName[b]); }
+    var lh = dv.getUint16(localOff + 26, true);
+    var lx = dv.getUint16(localOff + 28, true);
+    var dataStart = localOff + 30 + lh + lx;
+    var comp = u8.subarray(dataStart, dataStart + compSize);
+    var bytes;
+    if (method === 0) bytes = comp.slice();
+    else if (method === 8) bytes = pako.inflateRaw(comp);
+    else return null;
+    out[name] = bytes;
+    pos += 46 + nameLen + extraLen + cmtLen;
+  }
+  return out;
+}
+function extMime(name) {
+  var n = String(name || "").toLowerCase();
+  if (n.indexOf(".png") > 0) return "image/png";
+  if (n.indexOf(".gif") > 0) return "image/gif";
+  if (n.indexOf(".webp") > 0) return "image/webp";
+  return "image/jpeg";
+}
+function loadPicData(bytes, name) {
+  return new Promise(function (ok) {
+    try {
+      var blob = new Blob([bytes], { type: extMime(name) });
+      var rd = new FileReader();
+      rd.onload = function () {
+        var im = new Image();
+        im.onload = function () {
+          var src = downscaleImg(im, 2000) || rd.result;
+          ok({ src: src, iw: im.naturalWidth || 0, ih: im.naturalHeight || 0 });
+        };
+        im.onerror = function () { ok(null); };
+        im.src = rd.result;
+      };
+      rd.onerror = function () { ok(null); };
+      rd.readAsDataURL(blob);
+    } catch (e) { ok(null); }
+  });
+}
+function wrapOfficeLines(paras, fs, maxW) {
+  var ctx = txtMeasureCtx();
+  ctx.font = fontStr(fs, false, false, 0);
+  var out = [];
+  paras.forEach(function (p) {
+    if (p === "") { out.push(""); return; }
+    wrapLines(p, ctx, fs, maxW).forEach(function (l) { out.push(l); });
+  });
+  return out;
+}
+function textItemOf(x, y, text, fs, w) {
+  return { id: genId(), t: "x", x: x, y: y, w: w, rot: 0, text: text, fs: fs, ff: 0, color: "#1c1c1e", bold: false, italic: false, under: false, align: "left" };
+}
+function applySpecPages(nb, specPages) {
+  nb.pages = specPages.map(function (spec) {
+    var p = mkPage();
+    spec.forEach(function (it) { p.items.push(it); });
+    return p;
+  });
+  if (!nb.pages.length) nb.pages = [mkPage()];
+  nb.page = 0;
+}
+function parseXmlStr(str) {
+  var fixed = String(str || "").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "");
+  return new DOMParser().parseFromString(fixed, "application/xml");
+}
+
+function importDOCXContent(file, nb) {
+  return new Promise(function (resolve) {
+    var rd = new FileReader();
+    rd.onload = function () {
+      try {
+        var entries = zipEntries(rd.result);
+        if (!entries || !entries["word/document.xml"]) { toast("无法解析 .docx（文件可能已损坏或为旧版 .doc）"); resolve(false); return; }
+        var xml = new TextDecoder("utf-8").decode(entries["word/document.xml"]);
+        var dom = parseXmlStr(xml);
+        var ps = dom.getElementsByTagNameNS("*", "p");
+        var paras = [];
+        for (var i = 0; i < ps.length; i++) {
+          var p = ps[i];
+          var ts = p.getElementsByTagNameNS("*", "t");
+          var txt = "";
+          for (var j = 0; j < ts.length; j++) txt += ts[j].textContent;
+          if (txt) paras.push(txt); else if (paras.length && paras[paras.length - 1] !== "") paras.push("");
+        }
+        if (!paras.length) { toast("文档中没有可导入的文字内容"); resolve(false); return; }
+        var fs = 22, maxW = (nb.pw || STD_NB_W) - 160, lineH = Math.round(fs * 1.42);
+        var cap = Math.max(10, Math.floor(((nb.ph || STD_NB_H) - 150) / lineH));
+        var lines = wrapOfficeLines(paras, fs, maxW);
+        var specPages = [];
+        for (var k = 0; k < lines.length; k += cap) {
+          var chunk = lines.slice(k, k + cap);
+          specPages.push([textItemOf(70, 80, chunk.join("\n"), fs, maxW)]);
+        }
+        applySpecPages(nb, specPages);
+        saveDB(true); goPage(0); syncPageUI(); requestRender();
+        toast("已导入 Word 文字，" + specPages.length + " 页");
+        resolve(true);
+      } catch (e) { toast("DOCX 导入失败：" + e.message); resolve(false); }
+    };
+    rd.onerror = function () { toast("文件读取失败"); resolve(false); };
+    rd.readAsArrayBuffer(file);
+  });
+}
+function collectPptxSlides(entries) {
+  var slideRe = /^ppt\/slides\/slide(\d+)\.xml$/;
+  var relRe = /^ppt\/slides\/_rels\/slide(\d+)\.xml\.rels$/;
+  var slides = [];
+  Object.keys(entries).forEach(function (name) {
+    var m = name.match(slideRe);
+    if (m) slides.push({ n: parseInt(m[1], 10), name: name });
+  });
+  if (!slides.length) return null;
+  slides.sort(function (a, b) { return a.n - b.n; });
+  var rels = {};
+  Object.keys(entries).forEach(function (name) {
+    var m = name.match(relRe);
+    if (m) {
+      var xml = new TextDecoder("utf-8").decode(entries[name]);
+      var dom = parseXmlStr(xml);
+      var relsNodes = dom.getElementsByTagNameNS("*", "Relationship");
+      var map = {};
+      for (var i = 0; i < relsNodes.length; i++) map[relsNodes[i].getAttribute("Id")] = relsNodes[i].getAttribute("Target") || "";
+      rels[m[1]] = map;
+    }
+  });
+  return slides.map(function (sl) {
+    var xml = new TextDecoder("utf-8").decode(entries[sl.name]);
+    var dom = parseXmlStr(xml);
+    var paras = [];
+    var pNodes = dom.getElementsByTagNameNS("*", "p");
+    for (var a = 0; a < pNodes.length; a++) {
+      var ts = pNodes[a].getElementsByTagNameNS("*", "t");
+      var txt = "";
+      for (var b = 0; b < ts.length; b++) txt += ts[b].textContent;
+      if (txt) paras.push(txt);
+    }
+    var pics = [];
+    var picNodes = dom.getElementsByTagNameNS("*", "pic");
+    var seen = {};
+    var rNS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+    for (var d = 0; d < picNodes.length; d++) {
+      var blips = picNodes[d].getElementsByTagNameNS("*", "blip");
+      for (var e2 = 0; e2 < blips.length; e2++) {
+        var rid = blips[e2].getAttributeNS(rNS, "embed") || blips[e2].getAttribute("r:embed");
+        if (!rid) continue;
+        var tgt = (rels[String(sl.n)] || {})[rid] || "";
+        var mm = tgt.match(/media\/([^/]+)$/);
+        if (!mm) continue;
+        var entryName = "ppt/media/" + mm[1];
+        if (entries[entryName] && !seen[entryName]) { seen[entryName] = 1; pics.push({ entry: entryName, bytes: entries[entryName] }); }
+      }
+    }
+    return { paras: paras, pics: pics };
+  });
+}
+function importPPTXContent(file, nb) {
+  return new Promise(function (resolve) {
+    var rd = new FileReader();
+    rd.onload = function () {
+      try {
+        var entries = zipEntries(rd.result);
+        var slides = collectPptxSlides(entries);
+        if (!slides) { toast("无法解析 .pptx（请确认文件未损坏）"); resolve(false); return; }
+        var fs = 22, maxW = (nb.pw || STD_NB_W) - 160, lineH = Math.round(fs * 1.42);
+        var cap = Math.max(10, Math.floor(((nb.ph || STD_NB_H) - 150) / lineH));
+        var all = [];
+        var chain = Promise.resolve();
+        slides.forEach(function (sl) {
+          chain = chain.then(function () {
+            return Promise.all(sl.pics.map(function (pc) { return loadPicData(pc.bytes, pc.entry); })).then(function (imgs) {
+              var lines = wrapOfficeLines(sl.paras, fs, maxW);
+              var pageItems = [];
+              if (!lines.length && !imgs.length) return;
+              var pagesOf = [];
+              for (var k = 0; k < lines.length; k += cap) {
+                var chunk = lines.slice(k, k + cap);
+                var it = textItemOf(70, 80, chunk.join("\n"), fs, maxW);
+                pagesOf.push({ items: [it], lastBottom: 80 + chunk.length * lineH });
+              }
+              if (!pagesOf.length) pagesOf.push({ items: [], lastBottom: 80 });
+              var y = pagesOf[pagesOf.length - 1].lastBottom + 30;
+              imgs.forEach(function (im) {
+                if (!im || !im.iw) return;
+                var iw = Math.min(maxW, im.iw);
+                var ih = iw * (im.ih / im.iw);
+                if (ih > 420) { ih = 420; iw = ih * (im.iw / im.ih); }
+                pagesOf[pagesOf.length - 1].items.push({ id: genId(), t: "i", x: 70, y: y, w: iw, h: ih, rot: 0, src: im.src });
+                y += ih + 24;
+              });
+              pagesOf.forEach(function (pg) { all.push(pg.items); });
+            });
+          });
+        });
+        chain.then(function () {
+          if (!all.length) { toast("PPT 中没有可导入的内容"); resolve(false); return; }
+          applySpecPages(nb, all);
+          saveDB(true); goPage(0); syncPageUI(); requestRender();
+          toast("已导入 PPT 文字与图片，" + all.length + " 页");
+          resolve(true);
+        }, function () { toast("PPT 导入失败"); resolve(false); });
+      } catch (e) { toast("PPTX 导入失败：" + e.message); resolve(false); }
+    };
+    rd.onerror = function () { toast("文件读取失败"); resolve(false); };
+    rd.readAsArrayBuffer(file);
+  });
+}
+function importOfficeAsNew(file, kind) {
+  var nm = (file.name || "").toLowerCase();
+  var nb = nbFromFile(fileBaseName(file.name));
+  injectPako(function (ready) {
+    if (!ready) { toast("文档解析引擎未就绪，请联网后重试"); return; }
+    if (kind === "ppt") {
+      if (nm.indexOf(".pptx") < 0) { toast("仅支持新格式 .pptx，旧版 .ppt 请先用 Office/WPS 另存为 .pptx 或导出 PDF 再导入"); return; }
+      importPPTXContent(file, nb);
+    } else {
+      if (nm.indexOf(".docx") < 0) { toast("仅支持新格式 .docx，旧版 .doc 请先用 Office/WPS 另存为 .docx 或导出 PDF 再导入"); return; }
+      importDOCXContent(file, nb);
+    }
+  });
+}
+
+
 /* ---------- 渲染页面到画布（导出用） ---------- */
 function renderPageCanvas(nb, pi, opts) {
   opts = opts || {};
@@ -2210,8 +2646,33 @@ function updatePagePanel() {
     };
   });
 }
-/* FreeBoard 2.0 首页与库管理 */
-var homeFilter = { q: "", folder: "", tag: "", sort: "recent" };
+/* FreeBoard 2.3 首页与库管理 */
+var homeFilter = { q: "", folder: "", tag: "", sort: "modifiedDesc", view: "notes", trashSelAll: false };
+var homeSel = { on: false, ids: {} };
+var SORT_OPTS = [
+  ["modifiedDesc", "修改日期最近"],
+  ["modifiedAsc", "修改日期最早"],
+  ["createdDesc", "创建日期最近"],
+  ["createdAsc", "创建日期最早"],
+  ["nameAZ", "名称 A → Z"],
+  ["nameZA", "名称 Z → A"]
+];
+function sortLabelOf(k) { for (var i = 0; i < SORT_OPTS.length; i++) if (SORT_OPTS[i][0] === k) return SORT_OPTS[i][1]; return "排序"; }
+function nbKindText(nb) {
+  if (nb.kind === "note") return (nb.pages ? nb.pages.length : 1) + " 页";
+  return "无界画布";
+}
+function sortedNbs(list) {
+  var k = homeFilter.sort;
+  var arr = list.slice();
+  if (k === "nameAZ" || k === "nameZA") {
+    arr.sort(function (a, b) { var r = String(a.name || "").localeCompare(String(b.name || ""), "zh"); return k === "nameZA" ? -r : r; });
+  } else {
+    var field = (k === "createdAsc" || k === "createdDesc") ? "createdAt" : "updatedAt";
+    arr.sort(function (a, b) { var ta = a[field] || 0, tb = b[field] || 0; return (k === "createdDesc" || k === "modifiedDesc") ? tb - ta : ta - tb; });
+  }
+  return arr;
+}
 function buildHome() {
   var app = $("app");
   app.innerHTML =
@@ -2219,61 +2680,143 @@ function buildHome() {
     '<div class="home-hdr"><div class="brand"><span class="logo-mark">' + ic("pen") + "</span><div><h1>FreeBoard</h1><p>免费离线白板 · v" + VERSION + "</p></div></div>" +
     '<div class="hdr-actions">' +
     '<button class="iconbtn" id="btnSettings" title="设置">' + ic("settings") + "</button>" +
-    '<button class="btn primary" id="btnNewNb">' + ic("plus") + "<span>新建白板</span></button></div></div>" +
-    '<div class="home-tools"><div class="searchbox">' + ic("search") + '<input id="homeSearch" placeholder="搜索名称或标签"></div>' +
-    '<div class="home-filters" id="homeFilters"></div></div>' +
-    '<div id="nbGrid" class="nb-grid"></div>' +
-    '<div class="home-empty hide" id="homeEmpty"><div>' + ic("canvas") + "</div><p>还没有白板</p><button class='btn primary' onclick='window.FB&&FB.newNb()'>新建第一个白板</button></div>" +
+    '<button class="btn primary" id="btnNewNb">' + ic("plus") + "<span>新建</span></button></div></div>" +
+    '<div class="home-tabs" id="homeTabs">' +
+    '<button class="htab" data-v="notes">' + ic("pen") + "<span>笔记</span><i class='htab-cnt' id='cntNotes'></i></button>" +
+    '<button class="htab" data-v="folders">' + ic("folder") + "<span>文件夹</span><i class='htab-cnt' id='cntFolders'></i></button>" +
+    '<button class="htab" data-v="trash">' + ic("trash") + "<span>回收站</span><i class='htab-cnt' id='cntTrash'></i></button></div>" +
+    '<div class="home-body" id="homeBody"></div>' +
     "</div>";
   $("btnNewNb").onclick = function () { newNbModal(); };
   $("btnSettings").onclick = function () { settingsModal(); };
-  var si = $("homeSearch");
-  si.oninput = debounce(function () { homeFilter.q = si.value.trim().toLowerCase(); renderHome(); }, 200);
+  qsa(".htab", $("homeTabs")).forEach(function (b) {
+    b.onclick = function () { homeFilter.view = b.getAttribute("data-v"); if (homeFilter.view !== "notes") { homeSel.on = false; homeSel.ids = {}; } renderHome(); };
+  });
   renderHome();
+}
+function sortMenuModal() {
+  var rows = "";
+  SORT_OPTS.forEach(function (o) {
+    rows += '<button class="sort-row' + (homeFilter.sort === o[0] ? " on" : "") + '" data-s="' + o[0] + '">' +
+      (homeFilter.sort === o[0] ? ic("check") : '<span class="sort-dot"></span>') + "<span>" + o[1] + "</span></button>";
+  });
+  var m = modal("笔记排序", '<div class="sort-menu">' + rows + "</div>", {
+    footer: '<button class="btn primary" data-act="ok">完成</button>',
+    onOpen: function (mm) {
+      qsa(".sort-row", mm).forEach(function (b) {
+        b.onclick = function () {
+          homeFilter.sort = b.getAttribute("data-s");
+          qsa(".sort-row", mm).forEach(function (x) { x.classList.remove("on"); x.innerHTML = '<span class="sort-dot"></span><span>' + sortLabelOf(homeFilter.sort) + "</span>"; });
+          b.classList.add("on");
+          b.innerHTML = ic("check") + "<span>" + sortLabelOf(homeFilter.sort) + "</span>";
+          renderHome();
+        };
+      });
+    }
+  });
+  qs('[data-act="ok"]', m).onclick = closeModal;
+  qs('[data-act="close"]', m).onclick = closeModal;
 }
 function renderHome() {
   if ($("scrHome").classList.contains("hide")) return;
+  qsa(".htab", $("homeTabs")).forEach(function (b) {
+    b.classList.toggle("on", b.getAttribute("data-v") === homeFilter.view);
+  });
+  var cn = $("cntNotes"), cf = $("cntFolders"), ct = $("cntTrash");
+  if (cn) cn.textContent = (DB.nbs || []).length;
+  if (cf) cf.textContent = (DB.folders || []).length;
+  if (ct) ct.textContent = ((DB.trash || []).length) || "";
+  var body = $("homeBody");
+  if (homeFilter.view === "folders") renderFoldersTab(body);
+  else if (homeFilter.view === "trash") renderTrashTab(body);
+  else renderNotesTab(body);
+}
+
+function renderNotesTab(body) {
   var folders = DB.folders || [];
   var tags = {};
-  DB.nbs.forEach(function (nb) { (nb.tags || []).forEach(function (t) { tags[t] = 1; }); });
+  (DB.nbs || []).forEach(function (nb) { (nb.tags || []).forEach(function (t) { tags[t] = 1; }); });
   var fh = '<button class="chip' + (!homeFilter.folder ? " on" : "") + '" data-f="">全部</button>' +
     '<button class="chip' + (homeFilter.folder === "_" ? " on" : "") + '" data-f="_">未分类</button>';
   folders.forEach(function (f) { fh += '<button class="chip' + (homeFilter.folder === f.id ? " on" : "") + '" data-f="' + f.id + '">' + esc(f.name) + "</button>"; });
-  fh += '<button class="chip act" id="btnNewFolder">' + ic("folder") + " 新建文件夹</button>";
   var th = "";
   Object.keys(tags).forEach(function (t) {
     th += '<button class="chip tag' + (homeFilter.tag === t ? " on" : "") + '" data-t="' + esc(t) + '">#' + esc(t) + "</button>";
   });
-  fh += '<span class="fsort"><button class="chip' + (homeFilter.sort === "recent" ? " on" : "") + '" data-s="recent">最近</button>' +
-    '<button class="chip' + (homeFilter.sort === "name" ? " on" : "") + '" data-s="name">名称</button></span>';
-  var box = $("homeFilters");
-  box.innerHTML = fh + (th ? '<span class="fsep"></span>' + th : "");
-  qsa("[data-f]", box).forEach(function (b) { b.onclick = function () { homeFilter.folder = b.getAttribute("data-f"); renderHome(); }; });
-  qsa("[data-t]", box).forEach(function (b) { b.onclick = function () { homeFilter.tag = b.getAttribute("data-t"); renderHome(); }; });
-  qsa("[data-s]", box).forEach(function (b) { b.onclick = function () { homeFilter.sort = b.getAttribute("data-s"); renderHome(); }; });
-  $("btnNewFolder").onclick = function () { newFolderModal(); };
-  var list = DB.nbs.slice();
-  var q = homeFilter.q;
-  list = list.filter(function (nb) {
+  var selBtns = homeSel.on ?
+    '<button class="btn slim danger-outline" id="btnSelToTrash">' + ic("trash") + " 移入回收站</button>" +
+    '<button class="btn slim" id="btnSelMove">' + ic("folder") + " 移到文件夹</button>" +
+    '<button class="btn slim ghost" id="btnSelCancel">取消多选</button>' : '';
+  var html = '<div class="home-tools">' +
+    '<div class="searchbox">' + ic("search") + '<input id="homeSearch" placeholder="搜索名称或标签（中文/数字/英文）"></div>' +
+    '<div class="home-filters" id="homeFilters">' + fh + (th ? '<span class="fsep"></span>' + th : "") +
+    '<span class="fsort">' + (homeSel.on ? '' : '<button class="chip act" id="btnMulti">多选管理</button>') + '<button class="chip act" id="btnSort" title="排序方式">' + ic("sort") + " " + esc(sortLabelOf(homeFilter.sort)) + "</button></span></div>" +
+    '<div class="home-selbar hide" id="homeSelBar"><span id="selCountTxt">已选 0 项</span>' + selBtns + "</div>" +
+    "</div>" +
+    '<div id="nbGrid" class="nb-grid"></div>' +
+    '<div class="home-empty hide" id="homeEmpty"></div>';
+  body.innerHTML = html;
+  var si = $("homeSearch");
+  if (si) {
+    si.value = homeFilter.q === "" ? "" : homeFilter.q;
+    si.oninput = debounce(function () { homeFilter.q = si.value.trim().toLowerCase(); renderHome(); }, 200);
+  }
+  qsa("[data-f]", body).forEach(function (b) { b.onclick = function () { homeFilter.folder = b.getAttribute("data-f"); homeFilter.tag = ""; renderHome(); }; });
+  qsa("[data-t]", body).forEach(function (b) { b.onclick = function () { homeFilter.tag = b.getAttribute("data-t"); renderHome(); }; });
+  var bs = $("btnSort");
+  if (bs) bs.onclick = sortMenuModal;
+  var bm = $("btnMulti");
+  if (bm) bm.onclick = function () { homeSel.on = true; homeSel.ids = {}; renderNotesTab(body); };
+  var bc = $("btnSelCancel");
+  if (bc) bc.onclick = function () { homeSel.on = false; homeSel.ids = {}; renderHome(); };
+  var bst = $("btnSelToTrash");
+  if (bst) bst.onclick = function () {
+    var ids = Object.keys(homeSel.ids);
+    if (!ids.length) { toast("请先勾选笔记"); return; }
+    confirmBox("移入回收站", "将选中的 <b>" + ids.length + "</b> 个笔记移入回收站？可在回收站恢复。", function () {
+      ids.forEach(function (id) { trashNb(id); });
+      homeSel.on = false; homeSel.ids = {};
+      saveDB(true); renderHome(); toast("已移入回收站 " + ids.length + " 个");
+    }, "移入回收站");
+  };
+  var bsm = $("btnSelMove");
+  if (bsm) bsm.onclick = function () {
+    var ids = Object.keys(homeSel.ids);
+    if (!ids.length) { toast("请先勾选笔记"); return; }
+    moveNbsModal(ids);
+  };
+  renderNotesGrid();
+  var qEmpty = $("homeEmpty");
+  if (qEmpty) qEmpty.innerHTML = '<div>' + ic("search") + "</div><p>" + (homeFilter.q ? "没有找到匹配的笔记，试试其它关键词" : (DB.nbs.length ? "当前筛选下没有笔记" : "还没有白板，点右上角「新建」开始")) + "</p>" +
+    '<button class="btn primary" onclick="window.FB&&FB.newNb()">新建笔记</button>';
+}
+function renderNotesGrid() {
+  var list = (DB.nbs || []).filter(function (nb) {
     if (homeFilter.folder === "_" && nb.folder) return false;
     if (homeFilter.folder && nb.folder !== homeFilter.folder) return false;
     if (homeFilter.tag && (nb.tags || []).indexOf(homeFilter.tag) < 0) return false;
-    if (q && (nb.name.toLowerCase().indexOf(q) < 0) && !(nb.tags || []).join(",").toLowerCase().includes(q)) return false;
+    var q = homeFilter.q;
+    if (q && String(nb.name || "").toLowerCase().indexOf(q) < 0 && !(nb.tags || []).join(",").toLowerCase().includes(q)) return false;
     return true;
   });
-  if (homeFilter.sort === "name") list.sort(function (a, b) { return a.name.localeCompare(b.name, "zh"); });
-  else list.sort(function (a, b) { return (b.openedAt || b.updatedAt || 0) - (a.openedAt || a.updatedAt || 0); });
-  var grid = $("nbGrid");
-  if (!list.length) { grid.innerHTML = ""; $("homeEmpty").classList.remove("hide"); return; }
-  $("homeEmpty").classList.add("hide");
+  list = sortedNbs(list);
+  var grid = $("nbGrid"); if (!grid) return;
+  var folders = DB.folders || [];
+  var selBar = $("homeSelBar");
+  if (selBar) selBar.classList.toggle("hide", !homeSel.on);
+  if (!list.length) { grid.innerHTML = ""; var e = $("homeEmpty"); if (e) e.classList.remove("hide"); return; }
+  var e2 = $("homeEmpty"); if (e2) e2.classList.add("hide");
   var html = "";
   list.forEach(function (nb) {
     var folderName = "";
     folders.forEach(function (f) { if (f.id === nb.folder) folderName = f.name; });
-    html += '<div class="nb-card" data-id="' + nb.id + '">' +
-      '<div class="nb-prev" style="background:' + nb.color + '22;border-color:' + nb.color + '55"><canvas data-id="' + nb.id + '" width="300" height="200"></canvas></div>' +
+    var checked = homeSel.ids[nb.id] ? " on" : "";
+    html += '<div class="nb-card' + (homeSel.on ? " selmode" : "") + '" data-id="' + nb.id + '">' +
+      (homeSel.on ? '<span class="nb-check' + checked + '" data-id="' + nb.id + '">' + ic("check") + "</span>" : "") +
+      '<div class="nb-prev" style="background:' + nb.color + '22;border-color:' + nb.color + '55"><canvas data-id="' + nb.id + '" width="300" height="200"></canvas>' +
+      '<span class="nb-kind">' + esc(nbKindText(nb)) + "</span></div>" +
       '<div class="nb-info"><div class="nb-name">' + esc(nb.name) + "</div>" +
-      '<div class="nb-meta">' + nb.pages.length + " 页 · " + fmtTime(nb.updatedAt || nb.createdAt) +
+      '<div class="nb-meta">改于 ' + fmtTime(nb.updatedAt || nb.createdAt) +
       (folderName ? " · " + esc(folderName) : "") + "</div>" +
       (nb.tags && nb.tags.length ? '<div class="nb-tags">' + nb.tags.map(function (t) { return "<span>#" + esc(t) + "</span>"; }).join("") + "</div>" : "") +
       "</div>" +
@@ -2283,137 +2826,259 @@ function renderHome() {
   qsa(".nb-card", grid).forEach(function (card) {
     var id = card.getAttribute("data-id");
     var nb = findNb(id);
-    if (nb) {
-      var cv = qs("canvas", card);
-      var prevPage = nb.pages[nb.page || 0] || nb.pages[0];
-      if (prevPage) drawThumb(cv, prevPage, 300, 200, nb.paper, nb.paperColor);
-      qsa(".nb-info,.nb-prev", card).forEach(function (el) { el.onclick = function () { openNb(id); }; });
-      qs(".nb-menu", card).onclick = function (e) {
+    if (!nb) return;
+    var cv = qs("canvas", card);
+    var prevPage = nb.pages[nb.page || 0] || nb.pages[0];
+    if (prevPage) drawThumb(cv, prevPage, 300, 200, nb.paper, nb.paperColor);
+    var chk = qs(".nb-check", card);
+    if (homeSel.on && chk) {
+      chk.onclick = function (e) {
         e.stopPropagation();
-        var r = card.getBoundingClientRect();
-        showMenu(Math.min(r.right - 170, window.innerWidth - 180), r.bottom + 6, nbMenuItems(id));
+        if (homeSel.ids[id]) delete homeSel.ids[id]; else homeSel.ids[id] = 1;
+        var sc = $("selCountTxt"); if (sc) sc.textContent = "已选 " + Object.keys(homeSel.ids).length + " 项";
+        chk.classList.toggle("on", !!homeSel.ids[id]);
+        card.classList.toggle("sel", !!homeSel.ids[id]);
       };
     }
+    qsa(".nb-info,.nb-prev", card).forEach(function (el) {
+      el.onclick = function () {
+        if (homeSel.on) { if (chk) chk.click(); return; }
+        openNb(id);
+      };
+    });
+    qs(".nb-menu", card).onclick = function (e) {
+      e.stopPropagation();
+      if (homeSel.on) return;
+      var r = card.getBoundingClientRect();
+      showMenu(Math.min(r.right - 190, window.innerWidth - 200), r.bottom + 6, nbMenuItems(id));
+    };
+  });
+  updateSelBar();
+}
+function updateSelBar() {
+  var sc = $("selCountTxt");
+  if (sc) sc.textContent = "已选 " + Object.keys(homeSel.ids).length + " 项";
+  var bar = $("homeSelBar");
+  if (bar) bar.classList.toggle("hide", !homeSel.on);
+}
+
+function renderFoldersTab(body) {
+  var folders = DB.folders || [];
+  var html = '<div class="tab-note"><p>管理你的文件夹：点击文件夹查看其中笔记，笔记可在卡片菜单中「移动文件夹」。</p>' +
+    '<button class="btn primary slim" id="btnNewFolderTop">' + ic("folder") + " 新建文件夹</button></div>" +
+    '<div class="fld-grid" id="fldGrid"></div>' +
+    '<div class="home-empty hide" id="fldEmpty"><div>' + ic("folder") + "</div><p>还没有文件夹</p>" +
+    '<button class="btn primary" id="btnFldEmptyNew">新建文件夹</button></div>';
+  body.innerHTML = html;
+  $("btnNewFolderTop").onclick = function () { newFolderModal(); };
+  var be = $("btnFldEmptyNew");
+  if (be) be.onclick = function () { newFolderModal(); };
+  var grid = $("fldGrid");
+  var g = "";
+  folders.forEach(function (f) {
+    var cnt = (DB.nbs || []).filter(function (nb) { return nb.folder === f.id; }).length;
+    var last = null;
+    (DB.nbs || []).forEach(function (nb) { if (nb.folder === f.id && (!last || (nb.updatedAt || 0) > (last.updatedAt || 0))) last = nb; });
+    var prev = "";
+    if (last) {
+      prev = '<canvas data-id="' + last.id + '" width="300" height="140"></canvas>';
+    }
+    g += '<div class="fcard" data-id="' + f.id + '"><div class="fcard-prev">' + (prev || '<span class="fcard-ic">' + ic("folder") + "</span>") + "</div>" +
+      '<div class="fcard-info"><div class="fcard-name">' + esc(f.name) + "</div>" +
+      '<div class="fcard-meta">' + cnt + " 个笔记" + (last ? " · 最近 " + esc(last.name) : "") + "</div></div>" +
+      '<button class="nb-menu" title="文件夹菜单">' + ic("more") + "</button></div>";
+  });
+  g += '<button class="fcard act" id="fcardAdd">' + ic("folder") + "<b>新建文件夹</b><i>把笔记分门别类</i></button>";
+  grid.innerHTML = g;
+  var ea = $("fldEmpty");
+  if (!folders.length) { grid.innerHTML = ""; ea.classList.remove("hide"); ea.querySelector("button").onclick = function () { newFolderModal(); }; }
+  qsa(".fcard[data-id]", grid).forEach(function (card) {
+    var id = card.getAttribute("data-id");
+    var cv = qs("canvas", card);
+    if (cv) {
+      var nb = findNb(cv.getAttribute("data-id"));
+      if (nb) {
+        var prevPage = nb.pages[nb.page || 0] || nb.pages[0];
+        if (prevPage) drawThumb(cv, prevPage, 300, 140, nb.paper, nb.paperColor);
+      }
+    }
+    qs(".fcard-info,.fcard-prev", card).onclick = function () {
+      homeFilter.view = "notes"; homeFilter.folder = id; homeFilter.tag = ""; renderHome();
+    };
+    qs(".nb-menu", card).onclick = function (e) {
+      e.stopPropagation();
+      var r = card.getBoundingClientRect();
+      showMenu(Math.min(r.right - 190, window.innerWidth - 200), r.bottom + 6, folderMenuItems(id));
+    };
+  });
+  var add = $("fcardAdd");
+  if (add) add.onclick = function () { newFolderModal(); };
+}
+function folderMenuItems(id) {
+  var f = null;
+  (DB.folders || []).forEach(function (x) { if (x.id === id) f = x; });
+  var name = f ? f.name : "";
+  return [
+    { t: "查看内容", f: function () { homeFilter.view = "notes"; homeFilter.folder = id; homeFilter.tag = ""; renderHome(); } },
+    { t: "重命名", f: function () { newFolderModal(f); } },
+    { t: "删除文件夹", danger: true, f: function () {
+      confirmBox("删除文件夹", "删除文件夹《" + esc(name) + "》后，里面的笔记会变为<b>未分类</b>，笔记内容不会丢失。", function () {
+        DB.folders = (DB.folders || []).filter(function (x) { return x.id !== id; });
+        (DB.nbs || []).forEach(function (nb) { if (nb.folder === id) nb.folder = ""; });
+        if (homeFilter.folder === id) homeFilter.folder = "";
+        saveDB(true); renderHome(); toast("文件夹已删除");
+      }, "删除文件夹");
+    } }
+  ];
+}
+function renderTrashTab(body) {
+  var trash = DB.trash || [];
+  var html = '<div class="tab-note"><p>回收站中的笔记可随时恢复，或彻底删除释放空间。</p>' +
+    '<button class="btn slim ghost" id="btnTrashEmpty" ' + (trash.length ? "" : "disabled") + ">" + ic("trash") + " 清空回收站</button></div>" +
+    '<div class="tr-list" id="trList"></div>' +
+    '<div class="home-empty hide" id="trEmpty"><div>' + ic("trash") + "</div><p>回收站是空的</p></div>";
+  body.innerHTML = html;
+  $("btnTrashEmpty").onclick = function () {
+    if (!trash.length) return;
+    confirmBox("清空回收站", "将永久删除回收站中的 <b>" + trash.length + "</b> 个笔记，无法恢复。确定继续？", function () {
+      DB.trash = []; saveDB(true); renderHome(); toast("回收站已清空");
+    }, "全部清空");
+  };
+  if (!trash.length) { $("trList").innerHTML = ""; $("trEmpty").classList.remove("hide"); return; }
+  $("trEmpty").classList.add("hide");
+  var html2 = "";
+  trash.forEach(function (t) {
+    var nb = t.nb;
+    html2 += '<div class="tr-card" data-id="' + t.id + '">' +
+      '<span class="nb-check tr" data-id="' + t.id + '">' + ic("check") + "</span>" +
+      '<div class="tr-prev"><canvas data-id="' + t.id + '" width="160" height="110"></canvas></div>' +
+      '<div class="tr-info"><div class="nb-name">' + esc(nb.name) + "</div>" +
+      '<div class="nb-meta">' + nbKindText(nb) + " · 删除于 " + fmtTime(t.deletedAt) + "</div></div>" +
+      '<div class="tr-acts"><button class="btn slim" data-op="restore">恢复</button>' +
+      '<button class="btn slim danger-outline" data-op="purge">彻底删除</button></div></div>';
+  });
+  var list = $("trList");
+  list.innerHTML = html2;
+  qsa(".tr-card", list).forEach(function (card) {
+    var id = card.getAttribute("data-id");
+    var t = trashItem(id);
+    if (!t) return;
+    var cv = qs("canvas", card);
+    var p0 = t.nb.pages[t.nb.page || 0] || t.nb.pages[0];
+    if (p0) drawThumb(cv, p0, 160, 110, t.nb.paper, t.nb.paperColor);
+    qs(".nb-check", card).onclick = function (e) {
+      e.stopPropagation();
+      if (homeSel.ids[id]) delete homeSel.ids[id]; else homeSel.ids[id] = 1;
+      card.classList.toggle("sel", !!homeSel.ids[id]);
+      updateTrashBulk(list);
+    };
+    qsa("[data-op]", card).forEach(function (b) {
+      b.onclick = function (e) {
+        e.stopPropagation();
+        var op = b.getAttribute("data-op");
+        if (op === "restore") restoreNb(id);
+        else if (op === "purge") confirmBox("彻底删除", "彻底删除《" + esc(t.nb.name) + "》？该操作无法撤销。", function () { purgeTrash(id); }, "彻底删除");
+      };
+    });
+  });
+  var bulk = '<div class="tr-bulk"><span id="trSelTxt">未选择</span>' +
+    '<button class="btn slim" id="btnTrRestore">恢复所选</button>' +
+    '<button class="btn slim danger-outline" id="btnTrPurge">彻底删除所选</button></div>';
+  var nb = document.createElement("div"); nb.id = "trBulk"; nb.className = "tr-bulk-wrap hide"; nb.innerHTML = bulk;
+  body.insertBefore(nb, list);
+  qs("#trBulk", body).querySelector("#btnTrRestore").onclick = function () {
+    var ids = Object.keys(homeSel.ids); if (!ids.length) { toast("请先勾选笔记"); return; }
+    ids.forEach(function (i) { restoreNb(i); });
+    homeSel.ids = {}; saveDB(true); renderHome(); toast("已恢复 " + ids.length + " 个笔记");
+  };
+  qs("#trBulk", body).querySelector("#btnTrPurge").onclick = function () {
+    var ids = Object.keys(homeSel.ids); if (!ids.length) { toast("请先勾选笔记"); return; }
+    confirmBox("彻底删除", "将永久删除所选 <b>" + ids.length + "</b> 个笔记，无法恢复。", function () {
+      ids.forEach(function (i) { purgeTrash(i); });
+      homeSel.ids = {}; saveDB(true); renderHome(); toast("已彻底删除");
+    }, "彻底删除");
+  };
+  updateTrashBulk(list);
+}
+function updateTrashBulk(list) {
+  var n = Object.keys(homeSel.ids).length;
+  var wrap = $("trBulk");
+  if (wrap) wrap.classList.toggle("hide", n === 0);
+  var t = $("trSelTxt");
+  if (t) t.textContent = n ? "已选 " + n + " 项" : "未选择";
+  qsa(".tr-card", list).forEach(function (card) {
+    if (homeSel.ids[card.getAttribute("data-id")]) card.classList.add("sel");
+    else card.classList.remove("sel");
   });
 }
+
 function nbMenuItems(id) {
+  var nb = findNb(id);
+  var nm = nb ? nb.name : "";
   return [
-    { t: "打开", f: function () { openNb(id); } },
-    { t: "重命名", f: function () { promptBox("重命名", findNb(id).name, function (v) { if (v) { findNb(id).name = v; saveDB(true); renderHome(); } }); } },
-    { t: "复制白板", f: function () { var nb = JSON.parse(JSON.stringify(findNb(id))); nb.id = genId(); nb.name += "（副本）"; nb.createdAt = Date.now(); nb.updatedAt = Date.now(); nb.pages.forEach(function (pg) { pg.id = genId(); pg.items.forEach(function (it) { it.id = genId(); }); }); DB.nbs.push(nb); saveDB(true); renderHome(); toast("已复制"); } },
-    { t: "移动文件夹", f: function () { moveNbModal(id); } },
+    { icon: ic("canvas"), t: "打开", f: function () { openNb(id); } },
+    { t: "重命名", f: function () { promptBox("重命名", nm, function (v) { v = v.trim(); if (v) { findNb(id).name = v; saveDB(true); renderHome(); } }); } },
+    { t: "复制笔记", f: function () { var cp = JSON.parse(JSON.stringify(findNb(id))); cp.id = genId(); cp.name += "（副本）"; cp.createdAt = Date.now(); cp.updatedAt = Date.now(); cp.openedAt = Date.now(); cp.pages.forEach(function (pg) { pg.id = genId(); pg.items.forEach(function (it) { it.id = genId(); }); }); DB.nbs.push(cp); saveDB(true); renderHome(); toast("已复制"); } },
+    { t: "移动文件夹", f: function () { moveNbsModal([id]); } },
     { t: "编辑标签", f: function () { tagNbModal(id); } },
     { t: "更换封面", f: function () { coverNbModal(id); } },
     { t: "备份这本", f: function () { backupNb(id); } },
-    { t: "删除", danger: true, f: function () { confirmBox("删除白板", "删除《" + esc(findNb(id).name) + "》？所有页面与内容将无法找回。", function () { DB.nbs = DB.nbs.filter(function (x) { return x.id !== id; }); saveDB(true); renderHome(); }, "删除"); } }
+    { t: "移入回收站", danger: true, f: function () {
+      confirmBox("移入回收站", "将《" + esc(nm) + "》移入回收站？可在回收站恢复。", function () {
+        trashNb(id); saveDB(true); renderHome(); toast("已移入回收站");
+      }, "移入回收站");
+    } }
   ];
 }
-function newNbModal() {
-  var html = '<div class="form-row"><label>名称</label><input class="inp" id="nbName" placeholder="例如：数学笔记" value=""></div>' +
-    '<div class="form-row"><label>纸张模板</label><div class="paper-row" id="paperRow"></div></div>' +
-    '<div class="form-row"><label>封面颜色</label><div class="paper-row" id="colorRow"></div></div>';
-  var m = modal("新建白板", html, {
-    footer: '<button class="btn ghost" data-act="no">取消</button><button class="btn primary" data-act="ok">创建</button>',
+function newFolderModal(editFolder) {
+  var isEdit = !!editFolder;
+  var curName = isEdit ? editFolder.name : "";
+  var html = '<div class="form-row"><label>' + (isEdit ? "文件夹名称" : "文件夹名称") + "</label>" +
+    '<input class="inp" id="fldName" maxlength="30" placeholder="例如：数学、英语、工作资料" value="' + esc(curName) + '"></div>' +
+    '<div class="form-tip">创建后可在首页「文件夹」页查看；笔记通过卡片菜单「移动文件夹」归类。</div>';
+  var m = modal(isEdit ? "重命名文件夹" : "新建文件夹", html, {
+    footer: '<button class="btn ghost" data-act="no">取消</button><button class="btn primary" data-act="ok">' + (isEdit ? "保存" : "创建") + "</button>",
     onOpen: function (mm) {
-      var pr = $("paperRow");
-      var html2 = "";
-      PAPERS.forEach(function (p, i) {
-        html2 += '<button class="paper-cell' + (i === 0 ? " on" : "") + '" data-p="' + p.id + '" title="' + p.name + '">' +
-          '<span class="pp-icon" data-pp="' + p.id + '"></span><i>' + p.name + "</i></button>";
-      });
-      pr.innerHTML = html2;
-      qsa(".paper-cell", pr).forEach(function (b) {
-        b.onclick = function () { qsa(".paper-cell", pr).forEach(function (x) { x.classList.remove("on"); }); b.classList.add("on"); };
-      });
-      var cr = $("colorRow");
-      cr.innerHTML = NB_COLORS.map(function (c) {
-        return '<button class="color-cell" data-c="' + c + '" style="background:' + c + '"></button>';
-      }).join("");
-      qsa(".color-cell", cr).forEach(function (b, i) { b.onclick = function () { qsa(".color-cell", cr).forEach(function (x) { x.classList.remove("on"); }); b.classList.add("on"); }; });
-      qsa(".color-cell", cr)[0].classList.add("on");
-      $("nbName").focus();
-      qs('[data-act="ok"]', mm).onclick = function () {
-        var name = $("nbName").value.trim() || "未命名白板";
-        var paper = qs(".paper-cell.on", pr).getAttribute("data-p");
-        var color = qs(".color-cell.on", cr).getAttribute("data-c");
-        var nb = mkNb(name, paper);
-        nb.color = color;
-        DB.nbs.push(nb);
-        saveDB(true);
-        closeModal();
-        openNb(nb.id);
-      };
-      qs('[data-act="no"]', mm).onclick = closeModal;
+      var i = $("fldName");
+      i.focus(); i.select();
+      i.onkeydown = function (e) { if (e.key === "Enter") qs('[data-act="ok"]', mm).click(); };
     }
   });
+  qs('[data-act="no"]', m).onclick = closeModal;
+  qs('[data-act="ok"]', m).onclick = function () {
+    var v = ($("fldName") || {}).value;
+    v = (v || "").trim();
+    if (!v) { toast("请输入文件夹名称"); return; }
+    if (isEdit) { editFolder.name = v; }
+    else {
+      var dup = (DB.folders || []).some(function (f) { return f.name === v; });
+      if (dup) { toast("已有同名文件夹"); return; }
+      DB.folders.push({ id: genId(), name: v, createdAt: Date.now() });
+    }
+    saveDB(true); closeModal();
+    homeFilter.view = "folders";
+    renderHome();
+  };
 }
-function openNb(id) {
-  var nb = findNb(id); if (!nb) return;
-  commitTextEdit && commitTextEdit(false);
-  nb.openedAt = Date.now(); saveDB(true);
-  if (!document.getElementById("scrEdit")) buildEditorShell();
-  S.nb = nb;
-  S.pi = clamp(nb.page || 0, 0, nb.pages.length - 1);
-  S.sel.ids = []; S.hist = { u: [], r: [] };
-  $("scrHome").classList.add("hide");
-  var ed = $("scrEdit"); ed.classList.remove("hide");
-  var t = $("nbTitle"); if (t) t.value = nb.name;
-  var badge = $("cvBadge"); if (badge) { badge.style.background = nb.color; }
-  refreshUndoUI();
-  fitView(); requestRender(); syncPageUI(); syncToolbar(); syncCtx(); syncSelBar(); updateCursor();
-  try { history.replaceState(null, "", "#b/" + nb.id); } catch (e) {}
-  resizeCanvas();
-  var panel = $("pagePanel"); if (panel) panel.classList.remove("open");
-  if ($("btnPagePanel")) $("btnPagePanel").classList.remove("on");
-}
-function closeToHome() {
-  if (S.typing) commitTextEdit(false);
-  S.nb = null;
-  S.sel.ids = [];
-  $("scrEdit").classList.add("hide");
-  $("scrHome").classList.remove("hide");
-  renderHome();
-  try { history.replaceState(null, "", location.pathname); } catch (e) {}
-  document.title = "FreeBoard 白板";
-}/* ---------- 上下文菜单 ---------- */
-function showMenu(x, y, items) {
-  var old = $("ctxMenu"); if (old) old.remove();
-  var m = document.createElement("div");
-  m.className = "ctxmenu"; m.id = "ctxMenu";
-  m.innerHTML = items.map(function (it) {
-    return '<button class="' + (it.danger ? "danger" : "") + '" data-i="' + esc(String(it.t)) + '">' + (it.icon ? it.icon : "") + esc(it.t) + "</button>";
-  }).join("");
-  document.body.appendChild(m);
-  var w = m.offsetWidth, h = m.offsetHeight;
-  m.style.left = clamp(x, 4, window.innerWidth - w - 8) + "px";
-  m.style.top = clamp(y, 4, window.innerHeight - h - 8) + "px";
-  qsa("button", m).forEach(function (b, i) { b.onclick = function (e) { e.stopPropagation(); m.remove(); items[i].f(); }; });
-  setTimeout(function () {
-    document.addEventListener("pointerdown", function h(e) {
-      if (!m.contains(e.target)) { m.remove(); document.removeEventListener("pointerdown", h); }
-    });
-  }, 10);
-}
-function newFolderModal() {
-  promptBox("新建文件夹", "", function (v) {
-    v = v.trim(); if (!v) return;
-    DB.folders.push({ id: genId(), name: v });
-    saveDB(true); renderHome();
-  }, "文件夹名称");
-}
-function moveNbModal(id) {
+function moveNbsModal(ids) {
   var opts = '<option value="">未分类</option>';
-  DB.folders.forEach(function (f) { opts += '<option value="' + f.id + '">' + esc(f.name) + "</option>"; });
-  var m = modal("移动到文件夹", '<select class="inp sel" id="folderSel">' + opts + "</select>", {
+  (DB.folders || []).forEach(function (f) { opts += '<option value="' + f.id + '">' + esc(f.name) + "</option>"; });
+  var html = '<p class="form-tip">将选中的 ' + ids.length + ' 个笔记移动到：</p>' +
+    '<select class="inp sel" id="folderSel">' + opts + "</select>";
+  var m = modal("移动到文件夹", html, {
     footer: '<button class="btn ghost" data-act="no">取消</button><button class="btn primary" data-act="ok">移动</button>'
   });
   qs('[data-act="ok"]', m).onclick = function () {
-    findNb(id).folder = $("folderSel").value; saveDB(true); closeModal(); renderHome();
+    var fid = $("folderSel").value;
+    ids.forEach(function (id) { var nb = findNb(id); if (nb) nb.folder = fid; });
+    saveDB(true); closeModal(); homeSel.ids = {}; homeSel.on = false;
+    renderHome(); toast("已移动 " + ids.length + " 个笔记");
   };
   qs('[data-act="no"]', m).onclick = closeModal;
 }
 function tagNbModal(id) {
   var nb = findNb(id);
+  if (!nb) return;
   var m = modal("编辑标签", '<input class="inp" id="tagInp" placeholder="多个标签用逗号分隔" value="' + esc((nb.tags || []).join("，")) + '">' +
     '<div class="form-tip">标签可帮助快速筛选，例如：工作、课堂、灵感</div>', {
     footer: '<button class="btn ghost" data-act="no">取消</button><button class="btn primary" data-act="ok">保存</button>'
@@ -2433,12 +3098,160 @@ function coverNbModal(id) {
   cr.innerHTML = NB_COLORS.map(function (c) {
     return '<button class="color-cell big" data-c="' + c + '" style="background:' + c + '"></button>';
   }).join("");
-  qsa(".color-cell", cr).forEach(function (b) { b.onclick = function () { qsa(".color-cell", cr).forEach(function (x) { x.classList.remove("on"); }); b.classList.add("on"); }; });
+  var nb = findNb(id);
+  qsa(".color-cell", cr).forEach(function (b) {
+    if (nb && b.getAttribute("data-c") === nb.color) b.classList.add("on");
+    b.onclick = function () { qsa(".color-cell", cr).forEach(function (x) { x.classList.remove("on"); }); b.classList.add("on"); };
+  });
   qs('[data-act="ok"]', m).onclick = function () {
     var c = qs(".color-cell.on", cr); if (c) findNb(id).color = c.getAttribute("data-c");
     saveDB(true); closeModal(); renderHome();
   };
   qs('[data-act="no"]', m).onclick = closeModal;
+}
+
+var lastNewKind = "note";
+function ensureHomeInputs() {
+  var host = $("scrHome");
+  if (!host || $("impPdfIn")) return;
+  var specs = [
+    ["impPdfIn", "application/pdf,.pdf", false, "pdf"],
+    ["impPptIn", ".ppt,.pptx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation", false, "ppt"],
+    ["impDocIn", ".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document", false, "doc"],
+    ["impImgIn", "image/*", true, "img"],
+    ["impCamIn", "image/*", false, "cam"]
+  ];
+  specs.forEach(function (s) {
+    var i = document.createElement("input");
+    i.type = "file"; i.id = s[0]; i.accept = s[1]; i.className = "hide";
+    if (s[2]) i.multiple = true;
+    if (s[3] === "cam") i.setAttribute("capture", "environment");
+    host.appendChild(i);
+  });
+  $("impPdfIn").addEventListener("change", function () { if (this.files && this.files.length) importPDFAsNew(this.files[0]); this.value = ""; });
+  $("impPptIn").addEventListener("change", function () { if (this.files && this.files.length) importOfficeAsNew(this.files[0], "ppt"); this.value = ""; });
+  $("impDocIn").addEventListener("change", function () { if (this.files && this.files.length) importOfficeAsNew(this.files[0], "doc"); this.value = ""; });
+  $("impImgIn").addEventListener("change", function () { if (this.files && this.files.length) importImagesAsNew(this.files); this.value = ""; });
+  $("impCamIn").addEventListener("change", function () { if (this.files && this.files.length) importImagesAsNew(this.files); this.value = ""; });
+}
+function newNbModal() {
+  ensureHomeInputs();
+  var html =
+    '<div class="form-row"><label>笔记类型</label><div class="krow" id="kindRow">' +
+    '<button class="kopt" data-k="note"><span class="k-ic">' + ic("pages") + '</span><b>标准笔记</b><i>A4 纸页式，适合书写记录、导入文档</i></button>' +
+    '<button class="kopt" data-k="board"><span class="k-ic">' + ic("hand") + '</span><b>无界笔记</b><i>无边无限画布，可自由缩放任意书写</i></button></div></div>' +
+    '<div id="blankRows">' +
+    '<div class="form-row"><label>名称</label><input class="inp" id="nbName" placeholder="例如：数学笔记" value=""></div>' +
+    '<div class="form-row"><label>纸张模板</label><div class="paper-row" id="paperRow"></div></div>' +
+    '<div class="form-row"><label>封面颜色</label><div class="paper-row" id="colorRow"></div></div>' +
+    "</div>" +
+    '<div class="new-imp"><div class="new-imp-t">快速导入文件创建</div>' +
+    '<div class="new-imp-btns">' +
+    '<button class="impbtn" id="impPdf">' + ic("pdf") + "<span>导入 PDF</span></button>" +
+    '<button class="impbtn" id="impPpt">' + ic("doc") + "<span>导入 PPT</span></button>" +
+    '<button class="impbtn" id="impDoc">' + ic("doc") + "<span>导入 DOC</span></button>" +
+    '<button class="impbtn" id="impImg">' + ic("img") + "<span>导入图片</span></button>" +
+    '<button class="impbtn" id="impCam">' + ic("camera") + "<span>拍照导入</span></button>" +
+    "</div>" +
+    '<div class="form-tip">PPT / DOC 支持 .pptx / .docx 文字内容导入；旧版 .ppt / .doc 请先另存为新格式或导出 PDF。</div></div>';
+  var m = modal("新建笔记", html, {
+    footer: '<button class="btn ghost" data-act="no">取消</button><button class="btn primary" data-act="ok">创建</button>',
+    onOpen: function (mm) {
+      function pickKind(k, silent) {
+        lastNewKind = k;
+        qsa(".kopt", $("kindRow")).forEach(function (x) { x.classList.toggle("on", x.getAttribute("data-k") === k); });
+        if (!silent) { $("nbName").focus(); }
+      }
+      pickKind(lastNewKind, true);
+      qsa(".kopt", $("kindRow")).forEach(function (b) { b.onclick = function () { pickKind(b.getAttribute("data-k")); }; });
+      var pr = $("paperRow");
+      var html2 = "";
+      PAPERS.forEach(function (p, i) {
+        html2 += '<button class="paper-cell' + (i === 0 ? " on" : "") + '" data-p="' + p.id + '" title="' + p.name + '">' +
+          '<span class="pp-icon" data-pp="' + p.id + '"></span><i>' + p.name + "</i></button>";
+      });
+      pr.innerHTML = html2;
+      qsa(".paper-cell", pr).forEach(function (b) {
+        b.onclick = function () { qsa(".paper-cell", pr).forEach(function (x) { x.classList.remove("on"); }); b.classList.add("on"); };
+      });
+      var cr = $("colorRow");
+      cr.innerHTML = NB_COLORS.map(function (c) {
+        return '<button class="color-cell" data-c="' + c + '" style="background:' + c + '"></button>';
+      }).join("");
+      qsa(".color-cell", cr).forEach(function (b, i) { b.onclick = function () { qsa(".color-cell", cr).forEach(function (x) { x.classList.remove("on"); }); b.classList.add("on"); }; });
+      qsa(".color-cell", cr)[0].classList.add("on");
+      $("nbName").focus();
+      qs('[data-act="ok"]', mm).onclick = function () {
+        var name = $("nbName").value.trim() || "未命名笔记";
+        var paper = qs(".paper-cell.on", pr).getAttribute("data-p");
+        var color = qs(".color-cell.on", cr).getAttribute("data-c");
+        var nb = mkNb(name, paper, lastNewKind);
+        nb.color = color;
+        DB.nbs.push(nb);
+        saveDB(true);
+        closeModal();
+        openNb(nb.id);
+        toast(lastNewKind === "board" ? "已创建无界笔记" : "已创建标准笔记");
+      };
+      qs('[data-act="no"]', mm).onclick = closeModal;
+      $("impPdf").onclick = function () { closeModal(); toast("请选择 PDF 文件"); setTimeout(function () { $("impPdfIn").click(); }, 60); };
+      $("impPpt").onclick = function () { closeModal(); setTimeout(function () { $("impPptIn").click(); }, 60); };
+      $("impDoc").onclick = function () { closeModal(); setTimeout(function () { $("impDocIn").click(); }, 60); };
+      $("impImg").onclick = function () { closeModal(); setTimeout(function () { $("impImgIn").click(); }, 60); };
+      $("impCam").onclick = function () { closeModal(); setTimeout(function () { $("impCamIn").click(); }, 60); };
+    }
+  });
+}
+
+function openNb(id) {
+  var nb = findNb(id); if (!nb) return;
+  commitTextEdit && commitTextEdit(false);
+  nb.openedAt = Date.now(); saveDB(true);
+  if (!document.getElementById("scrEdit")) buildEditorShell();
+  S.nb = nb;
+  S.pi = clamp(nb.page || 0, 0, nb.pages.length - 1);
+  S.sel.ids = []; S.hist = { u: [], r: [] };
+  $("scrHome").classList.add("hide");
+  var ed = $("scrEdit"); ed.classList.remove("hide");
+  var t = $("nbTitle"); if (t) t.value = nb.name;
+  var badge = $("cvBadge"); if (badge) { badge.style.background = nb.color; }
+  document.title = nb.name + " - FreeBoard";
+  refreshUndoUI();
+  fitView(); requestRender(); syncPageUI(); syncToolbar(); syncCtx(); syncSelBar(); updateCursor();
+  try { history.replaceState(null, "", "#b/" + nb.id); } catch (e) {}
+  resizeCanvas();
+  var panel = $("pagePanel"); if (panel) panel.classList.remove("open");
+  if ($("btnPagePanel")) $("btnPagePanel").classList.remove("on");
+}
+function closeToHome() {
+  if (S.typing) commitTextEdit(false);
+  S.nb = null;
+  S.sel.ids = [];
+  homeSel.on = false; homeSel.ids = {};
+  $("scrEdit").classList.add("hide");
+  $("scrHome").classList.remove("hide");
+  renderHome();
+  try { history.replaceState(null, "", location.pathname); } catch (e) {}
+  document.title = "FreeBoard 白板";
+}
+/* ---------- 上下文菜单 ---------- */
+function showMenu(x, y, items) {
+  var old = $("ctxMenu"); if (old) old.remove();
+  var m = document.createElement("div");
+  m.className = "ctxmenu"; m.id = "ctxMenu";
+  m.innerHTML = items.map(function (it) {
+    return '<button class="' + (it.danger ? "danger" : "") + '" data-i="' + esc(String(it.t)) + '">' + (it.icon ? it.icon : "") + esc(it.t) + "</button>";
+  }).join("");
+  document.body.appendChild(m);
+  var w = m.offsetWidth, h = m.offsetHeight;
+  m.style.left = clamp(x, 4, window.innerWidth - w - 8) + "px";
+  m.style.top = clamp(y, 4, window.innerHeight - h - 8) + "px";
+  qsa("button", m).forEach(function (b, i) { b.onclick = function (e) { e.stopPropagation(); m.remove(); items[i].f(); }; });
+  setTimeout(function () {
+    document.addEventListener("pointerdown", function h(e) {
+      if (!m.contains(e.target)) { m.remove(); document.removeEventListener("pointerdown", h); }
+    });
+  }, 10);
 }
 /* ---------- 设置 ---------- */
 function settingsModal() {
@@ -2451,6 +3264,7 @@ function settingsModal() {
     '<label class="switch"><input type="checkbox" id="optPalm" ' + (st.palm !== false ? "checked" : "") + "><i></i></label></div>" +
     '<div class="set-row"><div><b>双指缩放平移</b><p>任意工具下双指捏合缩放画布</p></div>' +
     '<label class="switch"><input type="checkbox" id="optPinch" ' + (st.pinch !== false ? "checked" : "") + "><i></i></label></div>" +
+    '<div class="set-row"><div><b>导入引擎</b><p>PDF 需要联网加载一次解析引擎；PPT/DOC 使用内置文本转换</p></div></div>' +
     '<div class="form-row"><button class="btn ghost" id="btnDataInfo">查看数据说明</button></div>' +
     '<div class="set-row"><div><b>关于</b><p>FreeBoard v' + VERSION + " · 完全免费 · 离线可用 · 无广告无账号</p></div>" +
     '<button class="btn ghost" id="btnAbout">关于</button></div>';
@@ -2477,22 +3291,28 @@ function applyTheme() {
 function helpModal(which) {
   var html;
   if (which === "about") {
-    html = "<p><b>FreeBoard 2.0</b> — 一款原创免费离线白板应用。</p>" +
+    html = "<p><b>FreeBoard 2.3</b> — 一款原创免费离线白板应用（仿 Notein 使用习惯）。</p>" +
       "<ul class='help-list'><li>所有数据仅保存在本机浏览器/应用内，不上传云端。</li>" +
       "<li>本软件与任何商业白板应用无关联，不含广告、账号与付费功能。</li>" +
       "<li>需要可安装的安卓 App 版请下载随包附带的 .apk 文件。</li></ul>";
   } else if (which === "data") {
     html = "<p>数据保存在本机（IndexedDB），卸载浏览器或清除数据会丢失笔记。</p>" +
-      "<p>建议定期使用「备份/恢复」：在首页白板卡片菜单或白板右上角菜单中，选择<b>全量备份</b>，将 JSON 文件保存到网盘/电脑。</p>" +
-      "<ul class='help-list'><li>单本备份：仅导出该白板</li><li>全量备份：所有文件夹与白板</li></ul>";
+      "<p>建议定期使用「备份/恢复」：在首页笔记卡片菜单或白板右上角菜单中，选择<b>全量备份</b>，将 JSON 文件保存到网盘/电脑。</p>" +
+      "<ul class='help-list'><li>单本备份：仅导出该笔记</li><li>全量备份：所有文件夹、笔记（回收站内容不包含）</li></ul>";
   } else {
-    html = "<h4>工具栏</h4><ul class='help-list'>" +
-      "<li><b>选择</b>：点选元素；空白处拖框多选；拖动移动；边角手柄缩放；上方圆钮旋转</li>" +
-      "<li><b>钢笔/铅笔/荧光笔</b>：手写；支持手写笔压感</li>" +
+    html = "<h4>首页与整理</h4><ul class='help-list'>" +
+      "<li><b>排序</b>：按创建/修改日期最近最早、名称 A-Z/Z-A 六种方式排序</li>" +
+      "<li><b>搜索</b>：输入中文、数字或英文名称、标签关键词快速查找</li>" +
+      "<li><b>文件夹</b>：顶部「文件夹」页新建/重命名/删除；笔记菜单「移动文件夹」归类</li>" +
+      "<li><b>回收站</b>：删除的笔记先进回收站，可勾选多选恢复或彻底删除</li></ul>" +
+      "<h4>新建笔记</h4><ul class='help-list'>" +
+      "<li><b>标准笔记</b>：A4 纸页式书写；<b>无界笔记</b>：无边画布自由书写</li>" +
+      "<li>可一键导入 PDF（逐页转图片）、图片、拍照；PPT/DOC 支持 .pptx/.docx 文字内容导入</li></ul>" +
+      "<h4>书写工具</h4><ul class='help-list'>" +
+      "<li><b>钢笔/铅笔/荧光笔</b>：手写，支持手写笔压感</li>" +
+      "<li><b>颜色</b>：切换笔类时颜色保持不变；<b>粗细/透明度</b>：选中笔后在下方面板滑动调节</li>" +
       "<li><b>橡皮</b>：擦除笔画局部或整张图片/文本框</li>" +
-      "<li><b>文本</b>：点一下画布输入文字，完成后点「✓」</li>" +
-      "<li><b>形状</b>：选择直线/箭头/矩形/椭圆/三角形/星形后拖拽</li>" +
-      "<li><b>图片</b>：相册多选、拍照或导入 PDF</li></ul>" +
+      "<li><b>文本/形状/图片</b>：文字、直线箭头矩形椭圆三角星形、相册图片</li></ul>" +
       "<h4>手势与快捷键</h4><ul class='help-list'>" +
       "<li>双指捏合缩放 · 双指拖动平移（触屏）</li>" +
       "<li>滚轮缩放（电脑 Ctrl+滚轮）/ 两指滚动平移（触控板）</li>" +
@@ -2506,6 +3326,7 @@ function helpModal(which) {
   modal(which === "about" ? "关于 FreeBoard" : which === "data" ? "数据与备份" : "帮助", html, { footer: '<button class="btn primary" data-act="ok">知道了</button>' });
   qs('[data-act="ok"]', $("modalBox")).onclick = closeModal;
 }
+
 /* FreeBoard 2.0 编辑器界面 */
 var QUICK_COLORS = ["#1a1a1a", "#ffffff", "#ef4444", "#f97316", "#facc15", "#22c55e", "#06b6d4", "#3b82f6", "#6366f1", "#a855f7", "#ec4899", "#8b5e34", "#94a3b8"];
 function buildEditorShell() {
@@ -2617,7 +3438,7 @@ function syncCtx() {
   if (t === "pen" || t === "pencil" || t === "hl" || t === "shape") {
     var cur = S.conf.color;
     html = '<div class="ctx-sws" id="ctxSws">' + swatchesHTML(cur) + "</div>" +
-      '<label class="ctx-slider"><span>粗细</span><input type="range" id="ctxW" min="1" max="18" step="0.5" value="' + S.conf.width + '"><b id="ctxWV">' + S.conf.width + "</b></label>" +
+      '<label class="ctx-slider"><span>粗细</span><input type="range" id="ctxW" min="1" max="32" step="0.5" value="' + S.conf.width + '"><b id="ctxWV">' + S.conf.width + "</b></label>" +
       '<label class="ctx-slider slim"><span>透明度</span><input type="range" id="ctxO" min="10" max="100" step="5" value="' + Math.round(S.conf.opacity * 100) + '"><b id="ctxOV">' + Math.round(S.conf.opacity * 100) + '%</b></label>';
     if (t === "shape") {
       html += '<div class="ctx-shapes">' + SHAPE_OPTS.map(function (s) {

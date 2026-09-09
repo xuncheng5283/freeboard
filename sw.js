@@ -1,5 +1,5 @@
-var CACHE = "freeboard-v2";
-var CORE = ["./", "./index.html", "./FreeBoard-单文件版.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png", "./icons/apple-touch-icon.png", "./lib/pdf.min.js", "./lib/pdf.worker.min.js"];
+var CACHE = "freeboard-v3";
+var CORE = ["./", "./index.html", "./FreeBoard-单文件版.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png", "./icons/apple-touch-icon.png", "./lib/pdf.min.js", "./lib/pdf.worker.min.js", "./lib/pako.min.js"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(CORE).catch(function () {}); }).then(function () { return self.skipWaiting(); }));
 });

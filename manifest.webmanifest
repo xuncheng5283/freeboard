@@ -1,7 +1,7 @@
 {
   "name": "FreeBoard 白板 - 免费离线手写白板",
   "short_name": "FreeBoard",
-  "description": "免费离线白板：手写笔、荧光笔、套索选择、图片、文本、PDF导入导出、多页笔记管理。无广告无账号。",
+  "description": "免费离线白板：免费离线白板：标准/无界笔记、文件夹分类、回收站、六种排序检索、手写标注、PDF/PPT/DOC/图片导入。无广告无账号。",
   "lang": "zh-CN",
   "start_url": "./index.html",
   "scope": "./",
