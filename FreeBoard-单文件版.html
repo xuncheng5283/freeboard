@@ -21,6 +21,30 @@
       MQP.removeEventListener = function (t, f) { if (t === "change") this.removeListener(f); };
     }
   } catch (e) {}
+  var _memStore = false;
+  try {
+    var _lsProbe = null;
+    try {
+      _lsProbe = window.localStorage;
+      _lsProbe.setItem("__fb_probe", "1");
+      _lsProbe.removeItem("__fb_probe");
+    } catch (e) { _lsProbe = null; }
+    if (!_lsProbe) {
+      var _mem = (function () {
+        var m = {};
+        return {
+          getItem: function (k) { return Object.prototype.hasOwnProperty.call(m, k) ? m[k] : null; },
+          setItem: function (k, v) { m[k] = String(v); },
+          removeItem: function (k) { delete m[k]; },
+          clear: function () { m = {}; },
+          key: function (i) { var ks = []; for (var k2 in m) if (Object.prototype.hasOwnProperty.call(m, k2)) ks.push(k2); return ks[i] || null; }
+        };
+      })();
+      try { Object.defineProperty(window, "localStorage", { configurable: true, get: function () { return _mem; } }); }
+      catch (e2) { try { window.localStorage = _mem; } catch (e3) {} }
+      window.__fbMemStore = true;
+    }
+  } catch (e4) {}
   function fatal(title, msg) {
     try { localStorage.setItem("fb_last_error", new Date().toString() + " | " + title + " | " + String(msg).slice(0, 1500)); } catch (e) {}
     var b = document.getElementById("fbFatal");
@@ -444,7 +468,7 @@ html,body{position:fixed;inset:0;width:100%}
 /* FreeBoard 2.0 基础模块 */
 (function () {
 "use strict";
-var VERSION = "2.3.1";
+var VERSION = "2.3.2";
 /* ---------- 工具函数 ---------- */
 function $(id) { return document.getElementById(id); }
 function qs(sel, root) { return (root || document).querySelector(sel); }
@@ -3916,6 +3940,21 @@ function onHash() {
     closeToHome();
   }
 }
+function fbWarnBanner(msg) {
+  try {
+    if (document.getElementById("fbWarn")) return;
+    var d = document.createElement("div");
+    d.id = "fbWarn";
+    d.style.cssText = "position:fixed;left:10px;right:10px;top:10px;z-index:90000;background:#fff7e0;border:1px solid #f2cf6a;color:#6b5310;font-size:13px;line-height:1.55;border-radius:10px;padding:9px 34px 9px 12px;box-shadow:0 4px 16px rgba(0,0,0,.16);";
+    d.textContent = msg;
+    var x = document.createElement("span");
+    x.textContent = "×";
+    x.style.cssText = "position:absolute;right:10px;top:7px;font-size:17px;color:#a3873a;cursor:pointer;";
+    x.onclick = function () { var p2 = d.parentNode; if (p2) p2.removeChild(d); };
+    d.appendChild(x);
+    (document.body || document.documentElement).appendChild(d);
+  } catch (e) {}
+}
 function boot() {
   loadDB().then(function () {
     try {
@@ -3931,6 +3970,9 @@ function boot() {
       document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") saveDB(true); });
       setInterval(function () { if (S.nb) saveDB(true); }, 30000);
       try { localStorage.removeItem("fb_last_error"); } catch (e) {}
+      var ua = navigator.userAgent || "";
+      if (ua.indexOf("MicroMessenger") >= 0 || ua.indexOf("wxwork") >= 0 || ua.indexOf("QQ/") >= 0 || ua.indexOf(" QQ ") >= 0) { fbWarnBanner("当前在微信/QQ 内置浏览器中打开，部分功能可能异常；请点右上角菜单，选择\u201c在浏览器中打开\u201d。"); }
+      else if (window.__fbMemStore) { fbWarnBanner("受限模式：当前浏览器禁止本地保存，关闭页面后笔记会丢失；建议改用在线版或安卓 APK。"); }
     } catch (e) {
       if (window.__fbFatal) window.__fbFatal("启动失败", String(e && e.message ? e.message : e));
     }
