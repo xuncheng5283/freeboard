@@ -11,6 +11,56 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<script>
+/* FreeBoard 2.3.1 启动兜底：任何异常都显示错误页，可重载或清数据重试 */
+(function () {
+  try {
+    var MQP = window.matchMedia ? Object.getPrototypeOf(window.matchMedia("(prefers-color-scheme: dark)")) : null;
+    if (MQP && !MQP.addEventListener && MQP.addListener) {
+      MQP.addEventListener = function (t, f) { if (t === "change") this.addListener(f); };
+      MQP.removeEventListener = function (t, f) { if (t === "change") this.removeListener(f); };
+    }
+  } catch (e) {}
+  function fatal(title, msg) {
+    try { localStorage.setItem("fb_last_error", new Date().toString() + " | " + title + " | " + String(msg).slice(0, 1500)); } catch (e) {}
+    var b = document.getElementById("fbFatal");
+    if (b) return;
+    b = document.createElement("div");
+    b.id = "fbFatal";
+    b.style.cssText = "position:fixed;left:0;top:0;right:0;bottom:0;z-index:999999;background:#eef1f6;color:#222;display:flex;align-items:center;justify-content:center;padding:22px;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;";
+    b.innerHTML = "<div style=\"max-width:540px;width:100%;background:#fff;border:1px solid #e2e6f0;border-radius:14px;padding:20px 22px;box-shadow:0 12px 34px rgba(30,40,70,.14);\">"
+      + "<div style=\"font-size:18px;font-weight:700;margin-bottom:10px;\">&#9888; " + (title || "出错了") + "</div>"
+      + "<div style=\"font-size:12px;color:#555;line-height:1.65;word-break:break-all;max-height:34vh;overflow:auto;background:#f7f8fb;border-radius:8px;padding:10px;font-family:monospace;\">" + String(msg || "").slice(0, 2500) + "</div>"
+      + "<div style=\"margin-top:14px;display:flex;flex-wrap:wrap;gap:10px;\">"
+      + "<button id=\"fbFatalReload\" style=\"flex:1;min-width:120px;padding:11px 0;border:0;border-radius:10px;background:#4f7cff;color:#fff;font-size:15px;\">重新加载</button>"
+      + "<button id=\"fbFatalReset\" style=\"flex:1;min-width:120px;padding:11px 0;border:1px solid #ef4444;border-radius:10px;background:#fff;color:#ef4444;font-size:15px;\">清空数据重试</button></div>"
+      + "<div style=\"margin-top:12px;font-size:12px;color:#888;line-height:1.6;\">一直打不开？请告诉我设备的安卓版本（设置-关于本机），或先用浏览器打开在线版 https://xuncheng5283.github.io/freeboard/ 看看是否正常。</div>"
+      + "</div>";
+    var host = document.body || document.documentElement;
+    host.appendChild(b);
+    b.querySelector("#fbFatalReload").onclick = function () { location.reload(); };
+    b.querySelector("#fbFatalReset").onclick = function () {
+      if (confirm("将删除本机上的全部白板数据（含笔记）。确定清空后重试？")) {
+        try { localStorage.removeItem("db"); } catch (e) {}
+        try { var i = window.indexedDB; if (i) i.deleteDatabase("freeboard2"); } catch (e) {}
+        location.reload();
+      }
+    };
+  }
+  window.__fbFatal = fatal;
+  window.addEventListener("error", function (e) {
+    if (!window.__fbFatal) return;
+    var loc = "";
+    if (e && e.filename) loc = "\n位置: " + String(e.filename).split("/").pop() + ":" + e.lineno;
+    fatal("页面运行出错", String(e && e.message ? e.message : "未知错误") + loc);
+  });
+  window.addEventListener("unhandledrejection", function (e) {
+    if (!window.__fbFatal) return;
+    var r = e && e.reason;
+    fatal("数据加载异常", String(r && r.message ? r.message : r));
+  });
+})();
+</script>
 <style>
 /* FreeBoard 2.0 界面样式 */
 :root{
@@ -394,7 +444,7 @@ html,body{position:fixed;inset:0;width:100%}
 /* FreeBoard 2.0 基础模块 */
 (function () {
 "use strict";
-var VERSION = "2.3.0";
+var VERSION = "2.3.1";
 /* ---------- 工具函数 ---------- */
 function $(id) { return document.getElementById(id); }
 function qs(sel, root) { return (root || document).querySelector(sel); }
@@ -607,7 +657,48 @@ function idbGet(k) {
 function lsRead(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } }
 function lsWrite(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
 var DB = { v: 2, folders: [], nbs: [], trash: [], settings: { theme: "auto", palm: true, pinch: true } };
-function loadDB() { return idbOpen().then(function (ok) { return ok ? idbGet("db") : Promise.resolve(null); }).then(function (d) { if (d && d.v === 2) DB = d; DB.folders = DB.folders || []; DB.nbs = DB.nbs || []; DB.trash = DB.trash || []; DB.settings = DB.settings || {}; var now = Date.now(); DB.nbs.forEach(function (nb) { if (!nb.createdAt) nb.createdAt = nb.updatedAt || now; if (!nb.updatedAt) nb.updatedAt = nb.createdAt; if (!nb.openedAt) nb.openedAt = nb.updatedAt; if (!nb.pages || !nb.pages.length) nb.pages = [mkPage()]; if (!nb.kind) nb.kind = "board"; if (nb.kind === "note") { if (!nb.pw) nb.pw = STD_NB_W; if (!nb.ph) nb.ph = STD_NB_H; } }); }); }
+function loadDB() {
+  return idbOpen().then(function (ok) { return ok ? idbGet("db") : Promise.resolve(null); }).then(function (d) {
+    try {
+      if (d && typeof d === "object" && (d.v === 2 || d.v === 1 || d.nbs)) {
+        try { localStorage.setItem("fb_db_backup", JSON.stringify(d).slice(0, 2000000)); } catch (e2) {}
+        DB = d; DB.v = 2;
+      }
+      DB.folders = arrOfObj(DB.folders);
+      DB.nbs = arrOfObj(DB.nbs);
+      DB.trash = arrOfObj(DB.trash);
+      DB.settings = DB.settings && typeof DB.settings === "object" ? DB.settings : {};
+      var now = Date.now();
+      DB.nbs.forEach(function (nb) {
+        if (!nb.id) nb.id = genId();
+        if (!nb.name) nb.name = "未命名笔记";
+        if (!nb.createdAt) nb.createdAt = nb.updatedAt || now;
+        if (!nb.updatedAt) nb.updatedAt = nb.createdAt;
+        if (!nb.openedAt) nb.openedAt = nb.updatedAt;
+        var ps = arrOfObj(nb.pages);
+        if (!ps.length) ps = [mkPage()];
+        else {
+          for (var i2 = 0; i2 < ps.length; i2++) { var pg = ps[i2]; if (!pg.id) pg.id = genId(); if (!pg.items || Object.prototype.toString.call(pg.items) !== "[object Array]") pg.items = []; }
+        }
+        nb.pages = ps;
+        if (!nb.kind) nb.kind = "board";
+        if (nb.kind === "note") { if (!nb.pw) nb.pw = STD_NB_W; if (!nb.ph) nb.ph = STD_NB_H; }
+        else if (nb.kind === "board") { delete nb.pw; delete nb.ph; }
+      });
+      DB.trash = DB.trash.filter(function (t) { return t && typeof t === "object" && t.nb && typeof t.nb === "object" && t.nb.pages; });
+      try { if (window) window.__fbDbLoaded = true; } catch (e9) {}
+    } catch (e3) {
+      try { if (window) window.__fbDbError = String(e3 && e3.message ? e3.message : e3); } catch (e9) {}
+    }
+    return DB;
+  });
+}
+function arrOfObj(a) {
+  if (!a || Object.prototype.toString.call(a) !== "[object Array]") return [];
+  var out = [];
+  for (var i = 0; i < a.length; i++) { var x = a[i]; if (x && typeof x === "object") out.push(x); }
+  return out;
+}
 function saveDB(now) {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(function () {
@@ -2516,6 +2607,10 @@ function movePage(from, to) {
 }
 /* ---------- 缩略图 ---------- */
 function drawThumb(canvas, page, w, h, paperId, paperColor) {
+  try { drawThumbRaw(canvas, page, w, h, paperId, paperColor); }
+  catch (e) { try { var g = canvas.getContext("2d"); g.fillStyle = "#eef1f6"; g.fillRect(0, 0, canvas.width || w, canvas.height || h); } catch (e2) {} }
+}
+function drawThumbRaw(canvas, page, w, h, paperId, paperColor) {
   var c = canvas.getContext("2d");
   var dpr = Math.min(window.devicePixelRatio || 1, 2);
   canvas.width = w * dpr; canvas.height = h * dpr;
@@ -2649,6 +2744,18 @@ function updatePagePanel() {
 /* FreeBoard 2.3 首页与库管理 */
 var homeFilter = { q: "", folder: "", tag: "", sort: "modifiedDesc", view: "notes", trashSelAll: false };
 var homeSel = { on: false, ids: {} };
+var thumbQueue = [], thumbBusy = false;
+function scheduleThumb(cv, page, w, h, paper, paperColor) {
+  if (!cv || !page) return;
+  thumbQueue.push({ cv: cv, page: page, w: w, h: h, paper: paper, paperColor: paperColor });
+  if (!thumbBusy) { thumbBusy = true; setTimeout(flushThumbs, 20); }
+}
+function flushThumbs() {
+  var t = thumbQueue.shift();
+  if (!t) { thumbBusy = false; return; }
+  try { drawThumb(t.cv, t.page, t.w, t.h, t.paper, t.paperColor); } catch (e) {}
+  setTimeout(flushThumbs, 24);
+}
 var SORT_OPTS = [
   ["modifiedDesc", "修改日期最近"],
   ["modifiedAsc", "修改日期最早"],
@@ -2829,7 +2936,7 @@ function renderNotesGrid() {
     if (!nb) return;
     var cv = qs("canvas", card);
     var prevPage = nb.pages[nb.page || 0] || nb.pages[0];
-    if (prevPage) drawThumb(cv, prevPage, 300, 200, nb.paper, nb.paperColor);
+    if (prevPage) scheduleThumb(cv, prevPage, 300, 200, nb.paper, nb.paperColor);
     var chk = qs(".nb-check", card);
     if (homeSel.on && chk) {
       chk.onclick = function (e) {
@@ -2899,7 +3006,7 @@ function renderFoldersTab(body) {
       var nb = findNb(cv.getAttribute("data-id"));
       if (nb) {
         var prevPage = nb.pages[nb.page || 0] || nb.pages[0];
-        if (prevPage) drawThumb(cv, prevPage, 300, 140, nb.paper, nb.paperColor);
+        if (prevPage) scheduleThumb(cv, prevPage, 300, 140, nb.paper, nb.paperColor);
       }
     }
     qs(".fcard-info,.fcard-prev", card).onclick = function () {
@@ -2965,7 +3072,7 @@ function renderTrashTab(body) {
     if (!t) return;
     var cv = qs("canvas", card);
     var p0 = t.nb.pages[t.nb.page || 0] || t.nb.pages[0];
-    if (p0) drawThumb(cv, p0, 160, 110, t.nb.paper, t.nb.paperColor);
+    if (p0) scheduleThumb(cv, p0, 160, 110, t.nb.paper, t.nb.paperColor);
     qs(".nb-check", card).onclick = function (e) {
       e.stopPropagation();
       if (homeSel.ids[id]) delete homeSel.ids[id]; else homeSel.ids[id] = 1;
@@ -3811,18 +3918,24 @@ function onHash() {
 }
 function boot() {
   loadDB().then(function () {
-    applyTheme();
-    document.title = "FreeBoard 白板";
-    buildHome();
-    onHash();
-    if (("serviceWorker" in navigator) && /^https?:$/.test(location.protocol) && !location.hostname.startsWith("localhost")) {
-      navigator.serviceWorker.register("sw.js").catch(function () {});
+    try {
+      applyTheme();
+      document.title = "FreeBoard 白板";
+      buildHome();
+      onHash();
+      if (("serviceWorker" in navigator) && /^https?:$/.test(location.protocol) && !location.hostname.startsWith("localhost")) {
+        navigator.serviceWorker.register("sw.js").catch(function () {});
+      }
+      var mql = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
+      if (mql) { if (mql.addEventListener) mql.addEventListener("change", applyTheme); else if (mql.addListener) mql.addListener(applyTheme); }
+      document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") saveDB(true); });
+      setInterval(function () { if (S.nb) saveDB(true); }, 30000);
+      try { localStorage.removeItem("fb_last_error"); } catch (e) {}
+    } catch (e) {
+      if (window.__fbFatal) window.__fbFatal("启动失败", String(e && e.message ? e.message : e));
     }
-    if (window.matchMedia) {
-      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
-    }
-    document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") saveDB(true); });
-    setInterval(function () { if (S.nb) saveDB(true); }, 30000);
+  }, function (e) {
+    if (window.__fbFatal) window.__fbFatal("数据读取失败", String(e && e.message ? e.message : e));
   });
 }
 /* ---------- 收尾修正 ---------- */
