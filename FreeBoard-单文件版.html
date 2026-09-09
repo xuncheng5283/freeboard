@@ -459,6 +459,26 @@ html,body{position:fixed;inset:0;width:100%}
 .tr-card.sel .nb-check{background:var(--accent);border-color:var(--accent)}
 .tr-card.sel .nb-check svg.ic{display:block}
 
+
+/* v2.3.4: 文件夹回收站 / 手动排序 / 文件夹标签 */
+.nb-tags .nb-fold{display:inline-flex;align-items:center;gap:3px;background:rgba(59,130,246,.14);color:var(--accent2);padding:2px 8px;border-radius:10px;font-weight:700;cursor:pointer}
+.nb-tags .nb-fold.uc{background:var(--panel2);color:var(--mut);border:1px solid var(--line);cursor:default}
+.nb-tags .nb-fold svg.ic{width:11px;height:11px}
+.drag-tip{max-width:1180px;margin:2px auto 0;padding:0 22px;color:var(--mut);font-size:12px;text-align:center}
+.nb-card.armed{box-shadow:0 0 0 2px rgba(59,130,246,.5),var(--shadow);transform:scale(1.02)}
+.nb-card.dragging{transition:none;opacity:.92;box-shadow:var(--shadow);z-index:99;pointer-events:none}
+.nb-card.drop-before{outline:2px dashed var(--accent);outline-offset:3px}
+.nb-card.drop-after{outline:2px dashed var(--accent);outline-offset:3px}
+.trfilters{margin-top:2px}
+.chip .fchip-cnt{font-style:normal;background:rgba(59,130,246,.15);color:var(--accent2);border-radius:9px;padding:0 6px;margin-left:5px;font-size:11px}
+.tr-card.fld{flex-wrap:wrap}
+.tr-card.fld .tr-info{flex:1;min-width:180px}
+.tr-prev.fld-prev{display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(59,130,246,.18),rgba(99,102,241,.1))}
+.tr-prev.fld-prev svg.ic{width:34px;height:34px;color:var(--accent)}
+.tr-fnbs{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;width:100%}
+.tr-fnbs .fld-nm{font-size:11.5px;background:var(--panel2);border:1px solid var(--line);color:var(--ink);padding:2px 8px;border-radius:10px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tr-fnbs .fld-nm.more{color:var(--mut);background:transparent;border-style:dashed}
+@media(max-width:640px){.drag-tip{padding:0 12px}}
 </style>
 </head>
 <body>
@@ -468,7 +488,7 @@ html,body{position:fixed;inset:0;width:100%}
 /* FreeBoard 2.0 基础模块 */
 (function () {
 "use strict";
-var VERSION = "2.3.3";
+var VERSION = "2.3.4";
 /* ---------- 工具函数 ---------- */
 function $(id) { return document.getElementById(id); }
 function qs(sel, root) { return (root || document).querySelector(sel); }
@@ -709,7 +729,7 @@ function loadDB() {
         if (nb.kind === "note") { if (!nb.pw) nb.pw = STD_NB_W; if (!nb.ph) nb.ph = STD_NB_H; }
         else if (nb.kind === "board") { delete nb.pw; delete nb.ph; }
       });
-      DB.trash = DB.trash.filter(function (t) { return t && typeof t === "object" && t.nb && typeof t.nb === "object" && t.nb.pages; });
+      DB.trash = DB.trash.filter(function (t) { if (!t || typeof t !== "object") return false; if (t.kind === "folder") return !!(t.folder && typeof t.folder === "object" && t.nbs && Array.isArray(t.nbs)); return !!(t.nb && typeof t.nb === "object" && t.nb.pages); });
       try { if (window) window.__fbDbLoaded = true; } catch (e9) {}
     } catch (e3) {
       try { if (window) window.__fbDbError = String(e3 && e3.message ? e3.message : e3); } catch (e9) {}
@@ -724,6 +744,7 @@ function arrOfObj(a) {
   return out;
 }
 function saveDB(now) {
+  try { syncOrder(); } catch (e5) {}
   clearTimeout(saveTimer);
   saveTimer = setTimeout(function () {
     var json = JSON.stringify(DB);
@@ -735,6 +756,35 @@ function trashItem(id) { var t = DB.trash || []; for (var i = 0; i < t.length; i
 function trashNb(id) { var nb = findNb(id); if (!nb) return; var cp = JSON.parse(JSON.stringify(nb)); DB.trash.push({ id: genId(), nb: cp, deletedAt: Date.now() }); DB.nbs = DB.nbs.filter(function (x) { return x.id !== id; }); }
 function restoreNb(id) { var t = trashItem(id); if (!t) return; var f = t.nb.folder; var hasF = (DB.folders || []).some(function (x) { return x.id === f; }); if (f && !hasF) t.nb.folder = ""; DB.nbs.push(t.nb); DB.trash = DB.trash.filter(function (x) { return x.id !== id; }); }
 function purgeTrash(id) { DB.trash = DB.trash.filter(function (x) { return x.id !== id; }); }
+function trashFolder(id) {
+  var f = folderOf(id); if (!f) return;
+  var fc = JSON.parse(JSON.stringify(f));
+  var nbs = (DB.nbs || []).filter(function (x) { return x.folder === id; });
+  var copies = nbs.map(function (x) { return JSON.parse(JSON.stringify(x)); });
+  DB.trash.push({ id: "fld_" + id, kind: "folder", folder: fc, nbs: copies, deletedAt: Date.now() });
+  DB.nbs = (DB.nbs || []).filter(function (x) { return x.folder !== id; });
+  DB.folders = (DB.folders || []).filter(function (x) { return x.id !== id; });
+}
+function uniqueFolderName(name) {
+  var used = {}; (DB.folders || []).forEach(function (f) { used[f.name] = 1; });
+  if (!used[name]) return name;
+  var i = 2;
+  while (used[name + "（" + i + "）"]) i++;
+  return name + "（" + i + "）";
+}
+function restoreFolder(id) {
+  var t = trashItem(id); if (!t || t.kind !== "folder") return;
+  t.folder.name = uniqueFolderName(t.folder.name || "文件夹");
+  DB.folders.push(t.folder);
+  (t.nbs || []).forEach(function (nb) { DB.nbs.push(nb); });
+  DB.trash = DB.trash.filter(function (x) { return x.id !== id; });
+}
+function restoreTrashEntry(id) { var t = trashItem(id); if (!t) return; if (t.kind === "folder") restoreFolder(id); else restoreNb(id); }
+function trashEntryText(id) {
+  var t = trashItem(id); if (!t) return "";
+  if (t.kind === "folder") return "文件夹《" + ((t.folder && t.folder.name) || "文件夹") + "》及其中的 " + (t.nbs || []).length + " 个笔记";
+  return "《" + ((t.nb && t.nb.name) || "笔记") + "》";
+}
 function folderNameOf(fid) { var fs2 = DB.folders || []; for (var i = 0; i < fs2.length; i++) if (fs2[i].id === fid) return fs2[i].name; return ""; }
 function pageOf(nb, pi) { return nb.pages[pi]; }
 function itemsOf(nb, pi) { var p = nb.pages[pi]; return p.items; }
@@ -2123,6 +2173,7 @@ function fileBaseName(name) { return String(name || "").replace(/\.[^.]+$/, "").
 function nbFromFile(name, kind) {
   var nb = mkNb(name, "plain", kind || "note");
   nb.color = NB_COLORS[2 % NB_COLORS.length];
+  var cfn = activeFolderId(); if (cfn) nb.folder = cfn;
   DB.nbs.push(nb);
   saveDB(true);
   openNb(nb.id);
@@ -2766,7 +2817,30 @@ function updatePagePanel() {
   });
 }
 /* FreeBoard 2.3 首页与库管理 */
-var homeFilter = { q: "", folder: "", tag: "", sort: "modifiedDesc", view: "notes", trashSelAll: false };
+var homeFilter = { q: "", folder: "", tag: "", sort: "modifiedDesc", view: "notes", trashSelAll: false, trashKind: "nb" };
+function activeFolderId() {
+  if (homeFilter.view !== "notes") return "";
+  var f = homeFilter.folder;
+  if (!f || f === "_") return "";
+  var has = (DB.folders || []).some(function (x) { return x.id === f; });
+  return has ? f : "";
+}
+function folderOf(fid) { var fs2 = DB.folders || []; for (var i = 0; i < fs2.length; i++) if (fs2[i].id === fid) return fs2[i]; return null; }
+function syncOrder() {
+  var o = DB.order;
+  if (!Array.isArray(o)) o = DB.order = [];
+  (DB.nbs || []).forEach(function (nb) { if (o.indexOf(nb.id) < 0) o.push(nb.id); });
+  DB.order = o.filter(function (id) { for (var i = 0; i < DB.nbs.length; i++) if (DB.nbs[i].id === id) return true; return false; });
+}
+function applyManualMove(id, targetId, after) {
+  syncOrder();
+  var o = DB.order;
+  var from = o.indexOf(id);
+  if (from >= 0) o.splice(from, 1);
+  var at = targetId ? o.indexOf(targetId) : -1;
+  if (at < 0) o.push(id);
+  else { if (after) at += 1; if (at > o.length) at = o.length; o.splice(at, 0, id); }
+}
 var homeSel = { on: false, ids: {} };
 var thumbQueue = [], thumbBusy = false;
 function scheduleThumb(cv, page, w, h, paper, paperColor) {
@@ -2781,6 +2855,7 @@ function flushThumbs() {
   setTimeout(flushThumbs, 24);
 }
 var SORT_OPTS = [
+  ["manual", "手动排序（长按拖动）"],
   ["modifiedDesc", "修改日期最近"],
   ["modifiedAsc", "修改日期最早"],
   ["createdDesc", "创建日期最近"],
@@ -2796,6 +2871,12 @@ function nbKindText(nb) {
 function sortedNbs(list) {
   var k = homeFilter.sort;
   var arr = list.slice();
+  if (k === "manual") {
+    syncOrder();
+    var o = DB.order || [];
+    arr.sort(function (a, b) { var ia = o.indexOf(a.id), ib = o.indexOf(b.id); return (ia < 0 ? 1e9 : ia) - (ib < 0 ? 1e9 : ib); });
+    return arr;
+  }
   if (k === "nameAZ" || k === "nameZA") {
     arr.sort(function (a, b) { var r = String(a.name || "").localeCompare(String(b.name || ""), "zh"); return k === "nameZA" ? -r : r; });
   } else {
@@ -2884,6 +2965,7 @@ function renderNotesTab(body) {
     '<span class="fsort">' + (homeSel.on ? '' : '<button class="chip act" id="btnMulti">多选管理</button>') + '<button class="chip act" id="btnSort" title="排序方式">' + ic("sort") + " " + esc(sortLabelOf(homeFilter.sort)) + "</button></span></div>" +
     '<div class="home-selbar hide" id="homeSelBar"><span id="selCountTxt">已选 0 项</span>' + selBtns + "</div>" +
     "</div>" +
+    '<div class="drag-tip' + (homeFilter.sort === "manual" ? "" : " hide") + '" id="dragTip">长按任意笔记卡片并拖动即可手动排序（先在上方排序中选择“手动排序”）</div>' +
     '<div id="nbGrid" class="nb-grid"></div>' +
     '<div class="home-empty hide" id="homeEmpty"></div>';
   body.innerHTML = html;
@@ -2923,8 +3005,8 @@ function renderNotesTab(body) {
 }
 function renderNotesGrid() {
   var list = (DB.nbs || []).filter(function (nb) {
-    if (homeFilter.folder === "_" && nb.folder) return false;
-    if (homeFilter.folder && nb.folder !== homeFilter.folder) return false;
+    if (homeFilter.folder === "_") { if (nb.folder) return false; }
+    else if (homeFilter.folder && nb.folder !== homeFilter.folder) return false;
     if (homeFilter.tag && (nb.tags || []).indexOf(homeFilter.tag) < 0) return false;
     var q = homeFilter.q;
     if (q && String(nb.name || "").toLowerCase().indexOf(q) < 0 && !(nb.tags || []).join(",").toLowerCase().includes(q)) return false;
@@ -2947,9 +3029,9 @@ function renderNotesGrid() {
       '<div class="nb-prev" style="background:' + nb.color + '22;border-color:' + nb.color + '55"><canvas data-id="' + nb.id + '" width="300" height="200"></canvas>' +
       '<span class="nb-kind">' + esc(nbKindText(nb)) + "</span></div>" +
       '<div class="nb-info"><div class="nb-name">' + esc(nb.name) + "</div>" +
-      '<div class="nb-meta">改于 ' + fmtTime(nb.updatedAt || nb.createdAt) +
-      (folderName ? " · " + esc(folderName) : "") + "</div>" +
-      (nb.tags && nb.tags.length ? '<div class="nb-tags">' + nb.tags.map(function (t) { return "<span>#" + esc(t) + "</span>"; }).join("") + "</div>" : "") +
+      '<div class="nb-meta">改于 ' + fmtTime(nb.updatedAt || nb.createdAt) + "</div>" +
+      '<div class="nb-tags">' + (folderName ? '<span class="nb-fold" data-f="' + nb.folder + '">' + ic("folder") + " " + esc(folderName) + "</span>" : '<span class="nb-fold uc">' + ic("folder") + " 未分类</span>") +
+      (nb.tags && nb.tags.length ? nb.tags.map(function (t) { return "<span>#" + esc(t) + "</span>"; }).join("") : "") + "</div>" +
       "</div>" +
       '<button class="nb-menu" title="更多">' + ic("more") + "</button></div>";
   });
@@ -2973,6 +3055,7 @@ function renderNotesGrid() {
     }
     qsa(".nb-info,.nb-prev", card).forEach(function (el) {
       el.onclick = function () {
+        if (card._fbArmed || card._fbDrag || card._fbSuppress) return;
         if (homeSel.on) { if (chk) chk.click(); return; }
         openNb(id);
       };
@@ -2983,6 +3066,9 @@ function renderNotesGrid() {
       var r = card.getBoundingClientRect();
       showMenu(Math.min(r.right - 190, window.innerWidth - 200), r.bottom + 6, nbMenuItems(id));
     };
+    var fbad = qs(".nb-fold[data-f]", card);
+    if (fbad) fbad.onclick = function (e) { e.stopPropagation(); homeFilter.folder = fbad.getAttribute("data-f"); homeFilter.tag = ""; renderHome(); };
+    if (homeFilter.sort === "manual" && !homeSel.on) bindManualDrag(card, id);
   });
   updateSelBar();
 }
@@ -2992,10 +3078,88 @@ function updateSelBar() {
   var bar = $("homeSelBar");
   if (bar) bar.classList.toggle("hide", !homeSel.on);
 }
+function bindManualDrag(card, id) {
+  var timer = 0, armed = false, dragging = false, pid = null;
+  var sx = 0, sy = 0, lastTarget = null, lastAfter = false;
+  var grid = $("nbGrid");
+  function clearAll() {
+    clearTimeout(timer);
+    armed = false; dragging = false;
+    card._fbArmed = false; card._fbDrag = false;
+    card.classList.remove("armed", "dragging");
+    if (card.style) card.style.transform = "";
+    qsa(".nb-card", grid).forEach(function (c) { c.classList.remove("drop-before", "drop-after"); });
+    if (grid) grid.style.touchAction = "";
+    card.removeEventListener("pointermove", onMove);
+  }
+  function onMove(e) {
+    if (!armed) {
+      if (Math.abs(e.clientX - sx) > 10 || Math.abs(e.clientY - sy) > 10) {
+        clearTimeout(timer); armed = false; card._fbArmed = false;
+        card.classList.remove("armed");
+      }
+      return;
+    }
+    var dx = e.clientX - sx, dy = e.clientY - sy;
+    if (!dragging && Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+    if (e.cancelable) e.preventDefault();
+    if (!dragging) {
+      dragging = true; card._fbDrag = true;
+      card.classList.add("dragging");
+      if (grid) grid.style.touchAction = "none";
+      try { if (navigator.vibrate) navigator.vibrate(15); } catch (er) {}
+    }
+    qsa(".nb-card", grid).forEach(function (c) { c.classList.remove("drop-before", "drop-after"); });
+    lastTarget = null; lastAfter = false;
+    var el = document.elementFromPoint(e.clientX, e.clientY);
+    var t = el && el.closest ? el.closest(".nb-card") : null;
+    if (t && t !== card) {
+      var tid = t.getAttribute("data-id");
+      if (tid && tid !== id) {
+        lastTarget = t;
+        var r = t.getBoundingClientRect();
+        lastAfter = e.clientY > r.top + r.height / 2;
+        t.classList.add(lastAfter ? "drop-after" : "drop-before");
+      }
+    }
+    card.style.transform = "translate(" + dx + "px," + dy + "px)";
+  }
+  function onUp(e) {
+    if (armed) {
+      var wasDrag = dragging;
+      if (dragging && lastTarget) applyManualMove(id, lastTarget.getAttribute("data-id"), lastAfter);
+      card._fbSuppress = true;
+      setTimeout(function () { card._fbSuppress = false; }, 450);
+      clearAll();
+      if (wasDrag) { saveDB(true); renderHome(); }
+      return;
+    }
+    clearAll();
+  }
+  function onDown(e) {
+    if (e.button !== undefined && e.button !== 0 && e.pointerType === "mouse") return;
+    var tg = e.target;
+    if (tg && tg.closest && tg.closest(".nb-menu, .nb-check")) return;
+    sx = e.clientX; sy = e.clientY; pid = e.pointerId;
+    clearAll();
+    card._fbSuppress = false;
+    timer = setTimeout(function () {
+      armed = true; card._fbArmed = true;
+      card.classList.add("armed");
+      card.addEventListener("pointermove", onMove, { passive: false });
+      try { card.setPointerCapture(pid); } catch (er) {}
+    }, 430);
+  }
+  card.addEventListener("pointerdown", onDown);
+  card.addEventListener("pointerup", onUp);
+  card.addEventListener("pointercancel", onUp);
+  card.addEventListener("contextmenu", function (e) { if (card._fbArmed || card._fbDrag) e.preventDefault(); });
+}
+
 
 function renderFoldersTab(body) {
   var folders = DB.folders || [];
-  var html = '<div class="tab-note"><p>管理你的文件夹：点击文件夹查看其中笔记，笔记可在卡片菜单中「移动文件夹」。</p>' +
+  var html = '<div class="tab-note"><p>管理你的文件夹：点击文件夹查看其中笔记；笔记卡片菜单可「移动文件夹」归类；删除文件夹会连同其中的笔记一起进入回收站，可恢复。</p>' +
     '<button class="btn primary slim" id="btnNewFolderTop">' + ic("folder") + " 新建文件夹</button></div>" +
     '<div class="fld-grid" id="fldGrid"></div>' +
     '<div class="home-empty hide" id="fldEmpty"><div>' + ic("folder") + "</div><p>还没有文件夹</p>" +
@@ -3053,40 +3217,64 @@ function folderMenuItems(id) {
     { t: "查看内容", f: function () { homeFilter.view = "notes"; homeFilter.folder = id; homeFilter.tag = ""; renderHome(); } },
     { t: "重命名", f: function () { newFolderModal(f); } },
     { t: "删除文件夹", danger: true, f: function () {
-      confirmBox("删除文件夹", "删除文件夹《" + esc(name) + "》后，里面的笔记会变为<b>未分类</b>，笔记内容不会丢失。", function () {
-        DB.folders = (DB.folders || []).filter(function (x) { return x.id !== id; });
-        (DB.nbs || []).forEach(function (nb) { if (nb.folder === id) nb.folder = ""; });
+      var cnt = (DB.nbs || []).filter(function (x) { return x.folder === id; }).length;
+      confirmBox("删除文件夹", "文件夹《" + esc(name) + "》及其中 <b>" + cnt + "</b> 个笔记将一起移入回收站（回收站 → 文件夹栏），可随时恢复。确定删除？", function () {
+        trashFolder(id);
         if (homeFilter.folder === id) homeFilter.folder = "";
-        saveDB(true); renderHome(); toast("文件夹已删除");
+        saveDB(true); renderHome(); toast("文件夹已移入回收站");
       }, "删除文件夹");
     } }
   ];
 }
 function renderTrashTab(body) {
   var trash = DB.trash || [];
-  var html = '<div class="tab-note"><p>回收站中的笔记可随时恢复，或彻底删除释放空间。</p>' +
+  var notesTr = trash.filter(function (t) { return !t.kind || t.kind !== "folder"; });
+  var foldersTr = trash.filter(function (t) { return t.kind === "folder"; });
+  var kind = homeFilter.trashKind === "folder" ? "folder" : "nb";
+  var shown = kind === "folder" ? foldersTr : notesTr;
+  var html = '<div class="tab-note"><p>回收站中的内容可随时恢复，或彻底删除释放空间。删除文件夹时，文件夹与其中的笔记会一起进入回收站「文件夹」栏。</p>' +
     '<button class="btn slim ghost" id="btnTrashEmpty" ' + (trash.length ? "" : "disabled") + ">" + ic("trash") + " 清空回收站</button></div>" +
+    '<div class="home-filters trfilters">' +
+    '<button class="chip' + (kind === "nb" ? " on" : "") + '" data-tk="nb">笔记<i class="fchip-cnt">' + notesTr.length + "</i></button>" +
+    '<button class="chip' + (kind === "folder" ? " on" : "") + '" data-tk="folder">文件夹<i class="fchip-cnt">' + foldersTr.length + "</i></button></div>" +
     '<div class="tr-list" id="trList"></div>' +
-    '<div class="home-empty hide" id="trEmpty"><div>' + ic("trash") + "</div><p>回收站是空的</p></div>";
+    '<div class="home-empty hide" id="trEmpty"><div>' + ic("trash") + "</div><p>" + (kind === "folder" ? "回收站中没有已删除的文件夹" : "回收站是空的") + "</p></div>";
   body.innerHTML = html;
+  qsa("[data-tk]", body).forEach(function (b) { b.onclick = function () { homeFilter.trashKind = b.getAttribute("data-tk"); homeSel.ids = {}; renderHome(); }; });
   $("btnTrashEmpty").onclick = function () {
     if (!trash.length) return;
-    confirmBox("清空回收站", "将永久删除回收站中的 <b>" + trash.length + "</b> 个笔记，无法恢复。确定继续？", function () {
+    confirmBox("清空回收站", "将永久删除回收站中的全部 <b>" + trash.length + "</b> 项内容（笔记/文件夹），无法恢复。确定继续？", function () {
       DB.trash = []; saveDB(true); renderHome(); toast("回收站已清空");
     }, "全部清空");
   };
-  if (!trash.length) { $("trList").innerHTML = ""; $("trEmpty").classList.remove("hide"); return; }
+  if (!shown.length) { $("trList").innerHTML = ""; $("trEmpty").classList.remove("hide"); return; }
   $("trEmpty").classList.add("hide");
   var html2 = "";
-  trash.forEach(function (t) {
-    var nb = t.nb;
-    html2 += '<div class="tr-card" data-id="' + t.id + '">' +
-      '<span class="nb-check tr" data-id="' + t.id + '">' + ic("check") + "</span>" +
-      '<div class="tr-prev"><canvas data-id="' + t.id + '" width="160" height="110"></canvas></div>' +
-      '<div class="tr-info"><div class="nb-name">' + esc(nb.name) + "</div>" +
-      '<div class="nb-meta">' + nbKindText(nb) + " · 删除于 " + fmtTime(t.deletedAt) + "</div></div>" +
-      '<div class="tr-acts"><button class="btn slim" data-op="restore">恢复</button>' +
-      '<button class="btn slim danger-outline" data-op="purge">彻底删除</button></div></div>';
+  shown.forEach(function (t) {
+    if (kind === "folder") {
+      var fn = (t.folder && t.folder.name) || "文件夹";
+      var nbs2 = t.nbs || [];
+      var names = nbs2.slice(0, 14).map(function (nb) { return '<span class="fld-nm">' + esc(nb.name) + "</span>"; }).join("");
+      if (nbs2.length > 14) names += '<span class="fld-nm more">+' + (nbs2.length - 14) + "</span>";
+      html2 += '<div class="tr-card fld" data-id="' + t.id + '">' +
+        '<span class="nb-check tr" data-id="' + t.id + '">' + ic("check") + "</span>" +
+        '<div class="tr-prev fld-prev">' + ic("folder") + "</div>" +
+        '<div class="tr-info"><div class="nb-name">' + esc(fn) + "</div>" +
+        '<div class="nb-meta">' + nbs2.length + " 个笔记 · 删除于 " + fmtTime(t.deletedAt) + "</div>" +
+        (names ? '<div class="tr-fnbs">' + names + "</div>" : "") +
+        "</div>" +
+        '<div class="tr-acts"><button class="btn slim" data-op="restore">恢复</button>' +
+        '<button class="btn slim danger-outline" data-op="purge">彻底删除</button></div></div>';
+    } else {
+      var nb = t.nb;
+      html2 += '<div class="tr-card" data-id="' + t.id + '">' +
+        '<span class="nb-check tr" data-id="' + t.id + '">' + ic("check") + "</span>" +
+        '<div class="tr-prev"><canvas data-id="' + t.id + '" width="160" height="110"></canvas></div>' +
+        '<div class="tr-info"><div class="nb-name">' + esc(nb.name) + "</div>" +
+        '<div class="nb-meta">' + nbKindText(nb) + " · 删除于 " + fmtTime(t.deletedAt) + "</div></div>" +
+        '<div class="tr-acts"><button class="btn slim" data-op="restore">恢复</button>' +
+        '<button class="btn slim danger-outline" data-op="purge">彻底删除</button></div></div>';
+    }
   });
   var list = $("trList");
   list.innerHTML = html2;
@@ -3095,8 +3283,10 @@ function renderTrashTab(body) {
     var t = trashItem(id);
     if (!t) return;
     var cv = qs("canvas", card);
-    var p0 = t.nb.pages[t.nb.page || 0] || t.nb.pages[0];
-    if (p0) scheduleThumb(cv, p0, 160, 110, t.nb.paper, t.nb.paperColor);
+    if (cv && t.nb && t.nb.pages) {
+      var p0 = t.nb.pages[t.nb.page || 0] || t.nb.pages[0];
+      if (p0) scheduleThumb(cv, p0, 160, 110, t.nb.paper, t.nb.paperColor);
+    }
     qs(".nb-check", card).onclick = function (e) {
       e.stopPropagation();
       if (homeSel.ids[id]) delete homeSel.ids[id]; else homeSel.ids[id] = 1;
@@ -3107,8 +3297,8 @@ function renderTrashTab(body) {
       b.onclick = function (e) {
         e.stopPropagation();
         var op = b.getAttribute("data-op");
-        if (op === "restore") restoreNb(id);
-        else if (op === "purge") confirmBox("彻底删除", "彻底删除《" + esc(t.nb.name) + "》？该操作无法撤销。", function () { purgeTrash(id); }, "彻底删除");
+        if (op === "restore") { var rn = trashEntryText(id); restoreTrashEntry(id); saveDB(true); renderHome(); toast("已恢复" + rn); }
+        else if (op === "purge") { confirmBox("彻底删除", "将彻底删除" + trashEntryText(id) + "，该操作无法撤销。", function () { purgeTrash(id); saveDB(true); renderHome(); toast("已彻底删除"); }, "彻底删除"); }
       };
     });
   });
@@ -3119,14 +3309,14 @@ function renderTrashTab(body) {
   body.insertBefore(nb, list);
   qs("#trBulk", body).querySelector("#btnTrRestore").onclick = function () {
     var ids = Object.keys(homeSel.ids); if (!ids.length) { toast("请先勾选笔记"); return; }
-    ids.forEach(function (i) { restoreNb(i); });
-    homeSel.ids = {}; saveDB(true); renderHome(); toast("已恢复 " + ids.length + " 个笔记");
+    ids.forEach(function (i) { restoreTrashEntry(i); });
+    homeSel.ids = {}; saveDB(true); renderHome(); toast("已恢复 " + ids.length + " 项");
   };
   qs("#trBulk", body).querySelector("#btnTrPurge").onclick = function () {
     var ids = Object.keys(homeSel.ids); if (!ids.length) { toast("请先勾选笔记"); return; }
-    confirmBox("彻底删除", "将永久删除所选 <b>" + ids.length + "</b> 个笔记，无法恢复。", function () {
+    confirmBox("彻底删除", "将永久删除所选 <b>" + ids.length + "</b> 项（笔记/文件夹），无法恢复。", function () {
       ids.forEach(function (i) { purgeTrash(i); });
-      homeSel.ids = {}; saveDB(true); renderHome(); toast("已彻底删除");
+      homeSel.ids = {}; saveDB(true); renderHome(); toast("已彻底删除 " + ids.length + " 项");
     }, "彻底删除");
   };
   updateTrashBulk(list);
@@ -3267,6 +3457,8 @@ function ensureHomeInputs() {
 }
 function newNbModal() {
   ensureHomeInputs();
+  var ctxFid = activeFolderId();
+  var ctxName = ctxFid ? folderNameOf(ctxFid) : "";
   var html =
     '<div class="form-row"><label>笔记类型</label><div class="krow" id="kindRow">' +
     '<button class="kopt" data-k="note"><span class="k-ic">' + ic("pages") + '</span><b>标准笔记</b><i>A4 纸页式，适合书写记录、导入文档</i></button>' +
@@ -3275,6 +3467,7 @@ function newNbModal() {
     '<div class="form-row"><label>名称</label><input class="inp" id="nbName" placeholder="例如：数学笔记" value=""></div>' +
     '<div class="form-row"><label>纸张模板</label><div class="paper-row" id="paperRow"></div></div>' +
     '<div class="form-row"><label>封面颜色</label><div class="paper-row" id="colorRow"></div></div>' +
+    (ctxName ? '<div class="form-tip">新建后将归入文件夹「' + esc(ctxName) + '」，可在「全部」和该文件夹中看到</div>' : '<div class="form-tip">未分类笔记会同时出现在「全部」与「未分类」栏</div>') +
     "</div>" +
     '<div class="new-imp"><div class="new-imp-t">快速导入文件创建</div>' +
     '<div class="new-imp-btns">' +
@@ -3318,6 +3511,7 @@ function newNbModal() {
         var color = qs(".color-cell.on", cr).getAttribute("data-c");
         var nb = mkNb(name, paper, lastNewKind);
         nb.color = color;
+        var cfn = activeFolderId(); if (cfn) nb.folder = cfn;
         DB.nbs.push(nb);
         saveDB(true);
         closeModal();
@@ -3422,7 +3616,7 @@ function applyTheme() {
 function helpModal(which) {
   var html;
   if (which === "about") {
-    html = "<p><b>FreeBoard 2.3</b> — 一款原创免费离线白板应用（仿 Notein 使用习惯）。</p>" +
+    html = "<p><b>FreeBoard " + VERSION + "</b> — 一款原创免费离线白板应用（仿 Notein 使用习惯）。</p>" +
       "<ul class='help-list'><li>所有数据仅保存在本机浏览器/应用内，不上传云端。</li>" +
       "<li>本软件与任何商业白板应用无关联，不含广告、账号与付费功能。</li>" +
       "<li>需要可安装的安卓 App 版请下载随包附带的 .apk 文件。</li></ul>";
@@ -3432,10 +3626,10 @@ function helpModal(which) {
       "<ul class='help-list'><li>单本备份：仅导出该笔记</li><li>全量备份：所有文件夹、笔记（回收站内容不包含）</li></ul>";
   } else {
     html = "<h4>首页与整理</h4><ul class='help-list'>" +
-      "<li><b>排序</b>：按创建/修改日期最近最早、名称 A-Z/Z-A 六种方式排序</li>" +
+      "<li><b>排序</b>：六种自动排序；也可选「手动排序」后长按笔记卡片拖动调整顺序</li>" +
       "<li><b>搜索</b>：输入中文、数字或英文名称、标签关键词快速查找</li>" +
-      "<li><b>文件夹</b>：顶部「文件夹」页新建/重命名/删除；笔记菜单「移动文件夹」归类</li>" +
-      "<li><b>回收站</b>：删除的笔记先进回收站，可勾选多选恢复或彻底删除</li></ul>" +
+      "<li><b>文件夹</b>：顶部「文件夹」页新建/重命名；删除文件夹会连同其中的笔记一起进入回收站，可恢复</li>" +
+      "<li><b>回收站</b>：分「笔记 / 文件夹」两栏；删除的笔记与文件夹（含其中笔记）先进回收站，可勾选多选恢复或彻底删除</li></ul>" +
       "<h4>新建笔记</h4><ul class='help-list'>" +
       "<li><b>标准笔记</b>：A4 纸页式书写；<b>无界笔记</b>：无边画布自由书写</li>" +
       "<li>可一键导入 PDF（逐页转图片）、图片、拍照；PPT/DOC 支持 .pptx/.docx 文字内容导入</li></ul>" +

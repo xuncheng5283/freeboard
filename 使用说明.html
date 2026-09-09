@@ -7,15 +7,16 @@ h3{font-size:15.5px;margin:18px 0 6px;color:#3478f6}
 .step{display:flex;gap:10px;margin:8px 0}.step b{color:#3478f6;min-width:22px}
 code,kbd{background:#eef1f6;border-radius:6px;padding:1px 6px;font-size:13px}
 .note{background:#fff8e6;border:1px solid #f2d98a;border-radius:10px;padding:10px 14px;font-size:14px}
+.note.blue{background:#eef6ff;border-color:#bcd9ff}
 ul{margin:6px 0 6px 4px;padding-left:20px}li{margin:3px 0}
 .tag{display:inline-block;background:#e6f0ff;color:#2563eb;border-radius:10px;padding:0 8px;font-size:12px;margin-left:6px}
 </style></head><body>
-<h1>FreeBoard 白板 · 使用说明 <span class="tag">v2.3.2</span></h1>
-<p>免费、离线、无广告的手写白板 / 笔记软件（仿 Notein 使用习惯）。支持手指与触控笔、多页笔记、荧光笔、套索编辑、形状、图片、文本、PDF/PPT/DOC 导入、备份恢复。</p>
+<h1>FreeBoard 白板 · 使用说明 <span class="tag">v2.3.4</span></h1>
+<p>免费、离线、无广告的手写白板 / 笔记软件（仿 Notein 使用习惯）。支持手指与触控笔、多页笔记、文件夹归类、回收站、六种排序与检索、荧光笔、套索编辑、形状、图片、文本、PDF/PPT/DOC 导入、备份恢复。</p>
 <div class="note"><b>声明：</b>本软件为独立开发的原创软件，不含 Notein 的名称、图标、素材或代码，与 Notein 无任何关联。无广告、无账号、无内购，数据只保存在你本机。</div>
 <h2>一、三种使用方式</h2>
 <div class="card"><h3>方式 A · 安卓 APK（最方便，已签名）</h3>
-<div class="step"><b>1</b><span>把 <code>FreeBoard白板-v2.3.2.apk</code>（约 3MB）用数据线 / 微信 / QQ / 网盘发到安卓手机或平板。</span></div>
+<div class="step"><b>1</b><span>把 <code>FreeBoard白板-v2.3.4.apk</code>（约 3MB）用数据线 / 微信 / QQ / 网盘发到安卓手机或平板。</span></div>
 <div class="step"><b>2</b><span>点开 APK 安装；提示“未知来源 / 外部来源”时，在设置中允许本次安装即可。</span></div>
 <div class="step"><b>3</b><span>支持 Android 8.0+（minSdk 24），安装后完全离线可用。</span></div></div>
 <div class="card"><h3>方式 B · 网页版（iPhone / iPad / 电脑通用）</h3>
@@ -25,50 +26,40 @@ ul{margin:6px 0 6px 4px;padding-left:20px}li{margin:3px 0}
 <div class="step"><b>1</b><span>把整个 <code>FreeBoard</code> 文件夹上传到任意免费静态网站（GitHub Pages、Netlify Drop、Cloudflare Pages 等）。</span></div>
 <div class="step"><b>2</b><span>手机 / 平板浏览器打开该网址后：iPhone/iPad Safari 用「分享 → 添加到主屏幕」；Android Chrome/Edge 用菜单「安装应用 / 添加到主屏幕」。</span></div>
 <div class="step"><b>3</b><span>首次打开后自动缓存，可离线使用。</span></div></div>
-<h2>二、v2.3 新增功能</h2>
-<div class="card">
-<ul>
-<li><b>首页三页独立：</b>「笔记」「文件夹」「回收站」三个标签页，各管各的</li>
-<li><b>六种排序：</b>创建日期最近 / 最早、修改日期最近 / 最早、名称 A→Z、名称 Z→A，点排序按钮一键切换</li>
-<li><b>快速检索：</b>搜索框支持中文、数字、英文名称关键词（同时匹配标签），边输入边筛选</li>
-<li><b>文件夹：</b>修复“新建文件夹不生效”；文件夹页可新建 / 重命名 / 删除，点文件夹卡片查看其中笔记；笔记菜单「移动文件夹」归类，多选可批量移动</li>
-<li><b>回收站：</b>删除笔记先进回收站，卡片可勾选多选，恢复 / 彻底删除 / 一键清空</li>
-<li><b>标准笔记 / 无界笔记：</b>新建时可选：标准笔记为 A4 纸页式书写；无界笔记为无边无限画布、自由缩放书写</li>
-<li><b>导入创建：</b>导入 PDF（逐页转图片）、导入 PPT（.pptx 文字与图片）、导入 DOC（.docx 文字）、导入图片（可多选）、拍照导入</li>
-<li><b>书写优化：</b>切换钢笔 / 铅笔 / 荧光笔时颜色保持不变；粗细调节范围扩大到 1–32，实时预览</li>
-</ul>
-<div class="note"><b>小提示：</b>旧版 .ppt / .doc 请先用 Office/WPS 另存为 .pptx / .docx，或导出 PDF 后导入；PPT/DOC 以文字内容为主还原，复杂版式建议导出 PDF 逐页导入。</div>
-</div>
-<h2>
-- 启动安全（v2.3.2 新增）：打开时若检测到异常数据或运行错误，会显示修复页，可一键“重新加载”或“清空数据重试”，不再白屏闪退。
-
-- 打开兼容（v2.3.2 新增）：若浏览器禁止本地保存会自动进入“受限模式”并提示；在微信/QQ 内打开会提示改用系统浏览器，避免白屏与打不开。
-三、功能清单（除 AI 外全部实现）</h2>
+<h2>二、v2.3.4 更新内容</h2>
 <div class="card"><ul>
-<li>手写：钢笔 / 铅笔 / 荧光笔 / 橡皮擦（笔画级擦除，可只切断笔迹的一段）</li>
-<li>笔触：粗细 1–32、透明度、16 色 + 自定义颜色实时可调，切换笔类颜色不变</li>
-<li>双指缩放与平移、单指书写、触控笔书写自动忽略手掌（可关闭）</li>
+<li><b>文件夹归属：</b>在文件夹内点「新建」（包括 PDF / PPT / DOC / 图片 / 拍照导入），新笔记会直接归入该文件夹，同时出现在「全部」和该文件夹中</li>
+<li><b>文件夹标签：</b>每张笔记卡片显示所属文件夹标签（未分类则显示“未分类”），点文件夹标签可一键筛选该文件夹的笔记</li>
+<li><b>未分类笔记：</b>首页创建的未分类笔记，同时出现在「全部」与「未分类」栏</li>
+<li><b>文件夹回收站：</b>删除文件夹时，文件夹与其内全部笔记一起移入回收站新增的「文件夹」栏，名称与内容完整保留，可整组恢复或彻底删除；恢复时遇同名文件夹自动改名（如 数学（2））</li>
+<li><b>手动排序：</b>排序菜单新增「手动排序（长按拖动）」，选择后长按笔记卡片拖动到目标位置即可排序，卡片间有蓝色插入线提示</li>
+<li><b>稳定性：</b>修复重启后“文件夹”形态回收站内容丢失；修复回收站单条恢复 / 彻底删除后未即时保存与刷新界面的问题</li>
+</ul></div>
+<h2>三、功能清单（除 AI 外全部实现）</h2>
+<div class="card"><ul>
+<li>首页三页独立：笔记 / 文件夹 / 回收站；笔记卡片文件夹标签可点击筛选</li>
+<li>排序：手动排序（长按拖动）、创建日期最近 / 最早、修改日期最近 / 最早、名称 A→Z、名称 Z→A</li>
+<li>搜索：中文 / 数字 / 英文名称关键词与标签即时检索</li>
+<li>文件夹：新建 / 重命名 / 删除（连同笔记进回收站）、点文件夹查看内容、笔记菜单「移动文件夹」、多选批量移动</li>
+<li>回收站：「笔记 / 文件夹」两栏，勾选多选恢复或彻底删除、一键清空</li>
+<li>新建：标准笔记（A4 纸页式）/ 无界笔记（无边画布）</li>
+<li>导入创建：PDF（逐页转图片）、PPT（.pptx 文字与图片）、DOC（.docx 文字）、图片（多选）、拍照导入</li>
+<li>手写：钢笔 / 铅笔 / 荧光笔 / 橡皮擦（笔画级擦除）；切换笔类颜色不变；粗细 1–32 实时可调</li>
+<li>双指缩放与平移、单指书写、触控笔书写自动忽略手掌（可关）</li>
 <li>选择编辑：套索框选、拖动、8 向手柄缩放、旋转、复制 / 粘贴、删除</li>
-<li>图层：置顶 / 置底、水平 / 垂直翻转、旋转 90°</li>
-<li>文本：点击输入、自动换行、字号 / 颜色 / 加粗 / 斜体 / 下划线 / 对齐</li>
-<li>形状：直线 / 箭头 / 矩形 / 椭圆 / 三角形 / 五角星</li>
-<li>纸张：空白 / 点阵 / 方格 / 横线 / 康奈尔 / 五线谱；深色夜读背景</li>
+<li>图层：置顶 / 置底、水平 / 垂直翻转、旋转 90°；文本 / 形状 / 多种纸张模板、深色夜读背景</li>
 <li>页面管理：新增 / 复制 / 删除 / 排序 / 缩略图面板 / 底部翻页条</li>
-<li>笔记本库：文件夹、标签、搜索、六种排序、封面颜色、重命名、多选管理</li>
-<li>图片：相册 / 拍照 / 多选插入、粘贴图片、拖入图片</li>
-<li>PDF：导入（自动逐页变成白板页）、导出当前页 / 整本 PNG、导出“手写 PDF”</li>
-<li>撤销 / 重做（跨页可用）、双击放大、一键适应屏幕</li>
-<li>备份与恢复：单本或全量 JSON（换机 / 换浏览器可迁移）</li>
-<li>深浅主题、防误触等设置项；完全离线、无广告、无内购、不上传任何数据</li>
+<li>导出：当前页 / 整本 PNG、手写 PDF；备份与恢复 JSON（换机 / 换浏览器可迁移）</li>
+<li>启动异常自动进入修复页（一键重载或清空数据重试），不再白屏闪退；完全离线、无广告、无内购、不上传任何数据</li>
 </ul></div>
 <h2>四、常见问题</h2>
 <div class="card">
 <p><b>打不开或空白？</b> 用新版 Chrome / Edge / Safari，尽量别在微信内置浏览器中编辑。</p>
 <p><b>数据会云同步吗？</b> 不会，仅存当前设备本地；换设备请用「备份 JSON」导出后到另一台设备恢复，或导出 PNG / PDF 分享。</p>
 <p><b>能打开 Notein 笔记吗？</b> 不能（独立软件，格式不同），请先用 Notein 导出图片或 PDF 再导入。</p>
-<p><b>升级安装？</b> v2.3.2 与 v2.0 / v2.1 / v2.2 同签名，可直接覆盖安装；升级前建议先「备份」以防万一。</p>
+<p><b>升级安装？</b> v2.3.4 与 v2.0 ~ v2.3.3 同包名（com.freeboard.app）同签名，可直接覆盖安装并保留笔记；升级前建议先「备份」以防万一。若你装的是 v2.3.0 ~ v2.3.2（坏包名、点开就崩），请先卸载再装本版。</p>
 <p><b>PPT / DOC 导入不完整？</b> 文字内容会完整导入并自动分页；如需要与幻灯片/Word 完全一致的版式，请先导出 PDF 再导入 PDF。</p>
 </div>
-<p style="color:#57606a;font-size:13px">FreeBoard 白板 v2.3.2 · 2026-09-09 · 完全免费 · 包名 com.freeboard.app</p>
-<div style="background:#eef6ff;border:1px solid #bcd9ff;border-radius:12px;padding:12px 14px;margin:18px 0;line-height:1.9;font-size:14px"><b>【在线版（已发布，免费）】</b><br>- 网址：<a href="https://xuncheng5283.github.io/freeboard/">https://xuncheng5283.github.io/freeboard/</a><br>- 手机 / 平板 / 电脑浏览器直接打开即用，无需安装。<br>- 喜欢全屏体验：安卓 Chrome/Edge 点“安装应用”，iPhone/iPad 用 Safari “添加到主屏幕”即可变成 App 图标。<br>- 笔记数据同样只保存在本机，不会上传任何服务器。</div>
+<p style="color:#57606a;font-size:13px">FreeBoard 白板 v2.3.4 · 2026-09-09 · 完全免费 · 包名 com.freeboard.app · versionCode 20304</p>
+<div class="note blue"><b>【在线版（已发布，免费）】</b><br>- 网址：<a href="https://xuncheng5283.github.io/freeboard/">https://xuncheng5283.github.io/freeboard/</a><br>- 手机 / 平板 / 电脑浏览器直接打开即用，无需安装。<br>- 喜欢全屏体验：安卓 Chrome/Edge 点“安装应用”，iPhone/iPad 用 Safari “添加到主屏幕”即可变成 App 图标。<br>- 笔记数据同样只保存在本机，不会上传任何服务器。</div>
 </body></html>
